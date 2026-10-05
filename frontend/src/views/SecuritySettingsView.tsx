@@ -52,8 +52,8 @@ export const SecuritySettingsView: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch {
-      showToast('Failed to update password. Current password may be incorrect.', 'error');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to update password. Current password may be incorrect.', 'error');
     } finally {
       setLoadingPass(false);
     }

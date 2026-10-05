@@ -202,6 +202,15 @@ const JOB_SEEKER_QUICK_PROMPTS = [
   { icon: BookOpen, label: 'ICE to EV Bridge Pathway', query: 'What career pathways fit an ICE mechanic background?' },
 ];
 
+const TRAINING_CENTRE_QUICK_PROMPTS = [
+  { icon: Zap, label: 'Placement Demand in Pune', query: 'Which course batches have highest local placement demand in Pune?' },
+  { icon: RotateCcw, label: 'District Skill Deficits', query: 'What are the top industry skill deficits in our district?' },
+  { icon: TrendingUp, label: 'EV Apprentice Demand Forecast', query: 'Show apprentice demand forecast for EV powertrain diagnostics' },
+  { icon: BookOpen, label: 'Bridge Curriculum Setup', query: 'How to structure an ICE to EV bridge curriculum for ITI students?' },
+  { icon: Compass, label: 'High Demand Emerging Tech', query: 'Which emerging tech certifications should we add to our curriculum?' },
+  { icon: Sun, label: 'Solar Technician Course Sizing', query: 'What is the recommended batch capacity for rooftop solar technician training?' },
+];
+
 export const AIAnalystView: React.FC = () => {
   const { user, userRole, selectedStateId, selectedDistrictId } = useApp();
   const [inputText, setInputText] = useState('');
@@ -236,6 +245,31 @@ I am your personalized career transition copilot, powered by real-time labour ma
         ],
         timestamp: 'Live Session',
       }
+    : isTrainingMgr
+    ? {
+        id: 'msg-init',
+        sender: 'ai',
+        text: `### 🏫 Welcome${user?.name ? `, ${user.name}` : ''} to SkillSignal AI Training Advisor
+
+I am your vocational training & course planning copilot, grounded in local district industrial deficits, employer placement telemetry, and training capacity models.
+
+#### How I can assist your training centre:
+- 📊 **Course & Batch Planning**: Identify high-deficit skills in your district to expand high-placement batches.
+- 🔄 **Bridge Curriculum Design**: Structure rapid 2-4 week modular bridge courses to upskill local technicians.
+- 📈 **Forward Batch Demand**: 6 to 12-month apprentice demand curves to optimize admission seat counts.
+- 🤝 **Industry Placement Pathways**: Align course outcomes with active hiring clusters and OEM apprentice pipelines.
+
+*Select a quick prompt below or ask any course planning question!*`,
+        confidence: 96,
+        dataSources: ['National Career Service (NCS)', 'Skill India Digital Hub (SIDH)', 'MSDE Training Registry'],
+        suggestedFollowUps: [
+          'Which course batches have highest local placement demand in Pune?',
+          'What are the top industry skill deficits in our district?',
+          'Show apprentice demand forecast for EV powertrain diagnostics',
+          'Which emerging tech certifications should we add to our curriculum?',
+        ],
+        timestamp: 'Live Session',
+      }
     : {
         id: 'msg-init',
         sender: 'ai',
@@ -259,7 +293,11 @@ I am grounded in empirical labour-market telemetry from **768 districts**, **148
         timestamp: 'Live Session',
       };
 
-  const quickPrompts = isJobSeeker ? JOB_SEEKER_QUICK_PROMPTS : POLICY_QUICK_PROMPTS;
+  const quickPrompts = isJobSeeker 
+    ? JOB_SEEKER_QUICK_PROMPTS 
+    : isTrainingMgr 
+    ? TRAINING_CENTRE_QUICK_PROMPTS 
+    : POLICY_QUICK_PROMPTS;
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
 

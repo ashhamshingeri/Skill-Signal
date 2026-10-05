@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import {
   Lightbulb,
   AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   FileDown,
   Sparkles,
@@ -23,8 +24,11 @@ export const RecommendationsView: React.FC = () => {
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [selectedRec, setSelectedRec] = useState<any>(null);
   const [exported, setExported] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isJobSeeker = userRole === 'job_seeker';
+  const isTrainingMgr = userRole === 'training_centre';
 
   // Specific personalized career recommendations for candidate
   const jobSeekerRecommendations = [
@@ -115,23 +119,37 @@ export const RecommendationsView: React.FC = () => {
   }, [filterPriority, isJobSeeker]);
 
   const loadRecommendations = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await api.getRecommendations({
         priority: filterPriority !== 'all' ? filterPriority : undefined,
       });
       const list = res.recommendations || [];
       setRecommendations(list);
-      if (list.length > 0 && !selectedRec) {
-        setSelectedRec(list[0]);
+      if (list.length > 0) {
+        setSelectedRec((prev: any) => (prev && list.some((r: any) => r.id === prev.id) ? prev : list[0]));
+      } else {
+        setSelectedRec(null);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load recommendations:', e);
+      setError(e?.message || 'Failed to load policy recommendations.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleExport = () => {
     setExported(true);
-    showToast(isJobSeeker ? 'Career Action Plan downloaded' : 'Policy brief exported', 'success');
+    showToast(
+      isJobSeeker
+        ? 'Career Action Plan downloaded'
+        : isTrainingMgr
+        ? 'Course Planning Brief downloaded'
+        : 'Policy resource brief exported',
+      'success'
+    );
     setTimeout(() => setExported(false), 3000);
   };
 
@@ -142,21 +160,33 @@ export const RecommendationsView: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
             <span className="badge badge-primary">
-              {isJobSeeker ? 'Personalized Career Guidance' : 'Automated Resource Allocation'}
+              {isJobSeeker
+                ? 'Personalized Career Guidance'
+                : isTrainingMgr
+                ? 'Course & Batch Planning'
+                : 'Automated Resource Allocation'}
             </span>
           </div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-            {isJobSeeker ? 'Career & Learning Recommendations' : 'Policy & Capacity Recommendations'}
+            {isJobSeeker
+              ? 'Career & Learning Recommendations'
+              : isTrainingMgr
+              ? 'Course Planning & Batch Capacity'
+              : 'Policy & Capacity Recommendations'}
           </h2>
           <p style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--accent-purple)', margin: '0.2rem 0 0.25rem 0' }}>
             {isJobSeeker
               ? 'Personalized actions, bridge courses, and certifications to achieve your target career.'
+              : isTrainingMgr
+              ? 'Demand-backed course batch sizing, curriculum upgrades, and local employer placement alignment.'
               : 'Automated recommendations calculated from empirical demand spikes and forecasting trends.'}
           </p>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>
             {isJobSeeker
               ? 'Bridge courses · Skill acquisition milestones · Certification clearances · Hiring opportunities'
-              : 'Policy directives · PMKVY seating quotas · Hardware grant allocations'}
+              : isTrainingMgr
+              ? 'Batch capacity expansion · Curriculum modernizations · Lab hardware grant alignment · Placement pipelines'
+              : 'Policy directives · PMKVY seating quotas · Hardware grant allocations · Subsidy mandates'}
           </div>
         </div>
 
@@ -193,7 +223,21 @@ export const RecommendationsView: React.FC = () => {
             {isJobSeeker ? 'Active Career Recommendations' : 'Active Directives'} ({recommendations.length})
           </div>
 
-          {recommendations.map((rec) => {
+          {loading ? (
+            <div className="card-white" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ display: 'inline-block', width: '28px', height: '28px', border: '3px solid rgba(124, 58, 237, 0.2)', borderTopColor: '#7c3aed', borderRadius: '50%', marginBottom: '0.75rem', animation: 'spin 1s linear infinite' }} />
+              <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>Fetching latest recommendations...</div>
+            </div>
+          ) : recommendations.length === 0 ? (
+            <div className="card-white" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <AlertCircle size={32} color="#94a3b8" style={{ margin: '0 auto 0.75rem auto' }} />
+              <div style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: '0.92rem' }}>No recommendations found</div>
+              <div style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                {filterPriority !== 'all' ? `No ${filterPriority} priority items available.` : 'No active recommendations found.'}
+              </div>
+            </div>
+          ) : (
+            recommendations.map((rec) => {
             const isSelected = selectedRec?.id === rec.id;
             const isCritical = rec.priority === 'critical';
             const isHigh = rec.priority === 'high';
@@ -256,7 +300,7 @@ export const RecommendationsView: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
 
         {/* Right Column: Full Directive / Career Action Brief */}
@@ -268,10 +312,16 @@ export const RecommendationsView: React.FC = () => {
                 <span className={`badge ${selectedRec.priority === 'critical' ? 'badge-critical' : 'badge-shortage'}`}>
                   {isJobSeeker
                     ? `${selectedRec.priority.toUpperCase()} CAREER ACTION`
-                    : `${selectedRec.priority.toUpperCase()} DIRECTIVE • MSDE-2026-REC-${selectedRec.id}`}
+                    : isTrainingMgr
+                    ? `${selectedRec.priority.toUpperCase()} COURSE DIRECTIVE • TC-REC-${selectedRec.id}`
+                    : `${selectedRec.priority.toUpperCase()} POLICY DIRECTIVE • MSDE-2026-REC-${selectedRec.id}`}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {isJobSeeker ? 'Matched with your Career Profile' : 'Generated from Live Telemetry'}
+                  {isJobSeeker
+                    ? 'Matched with your Career Profile'
+                    : isTrainingMgr
+                    ? 'Local District Batch Demand'
+                    : 'Generated from Live Telemetry'}
                 </span>
               </div>
               <h3 style={{ fontSize: '1.35rem', color: 'var(--text-primary)', lineHeight: 1.3 }}>
@@ -301,7 +351,13 @@ export const RecommendationsView: React.FC = () => {
             <div>
               <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <TrendingUp size={16} color="#7c3aed" />
-                <span>{isJobSeeker ? 'Why This Matters for Your Career' : 'Empirical Market Evidence & Deficit Analysis'}</span>
+                <span>
+                  {isJobSeeker
+                    ? 'Why This Matters for Your Career'
+                    : isTrainingMgr
+                    ? 'Local Placement Demand & Industry Deficit'
+                    : 'Empirical Market Evidence & Deficit Analysis'}
+                </span>
               </h4>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 {selectedRec.reasoning}
@@ -312,7 +368,13 @@ export const RecommendationsView: React.FC = () => {
             <div style={{ background: 'rgba(124, 58, 237, 0.05)', border: '1px solid rgba(124, 58, 237, 0.2)', padding: '1rem', borderRadius: '10px' }}>
               <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#7c3aed', marginBottom: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <Lightbulb size={16} color="#7c3aed" />
-                <span>{isJobSeeker ? 'Next Step to Take' : 'Recommended MSDE Action & Resource Allocation'}</span>
+                <span>
+                  {isJobSeeker
+                    ? 'Next Step to Take'
+                    : isTrainingMgr
+                    ? 'Recommended Batch Plan & Course Action'
+                    : 'Recommended MSDE Action & Resource Allocation'}
+                </span>
               </h4>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
                 {selectedRec.suggestedAction}
@@ -329,7 +391,13 @@ export const RecommendationsView: React.FC = () => {
                 }}
               >
                 <Sparkles size={14} />
-                <span>{isJobSeeker ? 'Ask Career Advisor for Learning Guide' : 'Simulate Policy Impact'}</span>
+                <span>
+                  {isJobSeeker
+                    ? 'Ask Career Advisor for Learning Guide'
+                    : isTrainingMgr
+                    ? 'Ask Training Advisor to Plan Batch'
+                    : 'Simulate Policy Impact'}
+                </span>
               </button>
 
               <button
@@ -337,7 +405,13 @@ export const RecommendationsView: React.FC = () => {
                 onClick={handleExport}
               >
                 <FileDown size={14} />
-                <span>{isJobSeeker ? 'Save to My Plan' : 'Print Action Memo'}</span>
+                <span>
+                  {isJobSeeker
+                    ? 'Save to My Plan'
+                    : isTrainingMgr
+                    ? 'Save Batch Plan'
+                    : 'Print Action Memo'}
+                </span>
               </button>
             </div>
           </div>

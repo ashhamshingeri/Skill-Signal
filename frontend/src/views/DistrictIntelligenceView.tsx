@@ -16,12 +16,15 @@ import {
 } from 'lucide-react';
 
 export const DistrictIntelligenceView: React.FC = () => {
-  const { selectedDistrictId, setSelectedDistrictId, selectedStateId, setSelectedStateId, setActiveTab } = useApp();
+  const { userRole, selectedDistrictId, setSelectedDistrictId, selectedStateId, setSelectedStateId, setActiveTab } = useApp();
   const [states, setStates] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [activeDistrict, setActiveDistrict] = useState<any>(null);
   const [searchDistrict, setSearchDistrict] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const isJobSeeker = userRole === 'job_seeker';
+  const isTrainingMgr = userRole === 'training_centre';
 
   useEffect(() => {
     loadData();
@@ -64,14 +67,32 @@ export const DistrictIntelligenceView: React.FC = () => {
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <span className="badge badge-primary">Geospatial Intelligence</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tier-1, Tier-2 & Tier-3 District Granularity</span>
+            <span className="badge badge-primary">
+              {isJobSeeker 
+                ? 'Regional Hiring Clusters' 
+                : isTrainingMgr 
+                ? 'Training Capacity & Demand' 
+                : 'Geospatial Intelligence'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {isJobSeeker 
+                ? 'Local Employer Demand & Training Hubs' 
+                : 'Tier-1, Tier-2 & Tier-3 District Granularity'}
+            </span>
           </div>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
-            District-Level Labour Market & Training Readiness
+            {isJobSeeker 
+              ? 'Relevant Job Districts & Hiring Hubs' 
+              : isTrainingMgr 
+              ? 'District Demand & Training Capacity Allocation' 
+              : 'District-Level Labour Market & Capacity Disparities'}
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Local training capacity, data readiness index, and industrial cluster skill deficits.
+            {isJobSeeker
+              ? 'Explore high-demand industrial districts, job clusters, and regional training institutes near you.'
+              : isTrainingMgr
+              ? 'Assess local industrial cluster skill deficits, ITI training capacity utilization, and course expansion priorities.'
+              : 'Local training capacity, data readiness index, and industrial cluster skill deficits.'}
           </p>
         </div>
 

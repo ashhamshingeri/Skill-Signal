@@ -4,9 +4,12 @@ import { api } from '../services/api';
 import { HeatmapMatrix, type HeatmapRow } from '../components/Charts/HeatmapMatrix';
 
 export const GapHeatmapView: React.FC = () => {
-  const { setSelectedSkillId, setSelectedDistrictId, setActiveTab } = useApp();
+  const { userRole, setSelectedSkillId, setSelectedDistrictId, setActiveTab } = useApp();
   const [selectedSector, setSelectedSector] = useState<string>('all');
   const [selectedState, setSelectedState] = useState<string>('all');
+
+  const isJobSeeker = userRole === 'job_seeker';
+  const isTrainingMgr = userRole === 'training_centre';
 
   const skillsList = [
     'EV Diagnostics',
@@ -112,14 +115,32 @@ export const GapHeatmapView: React.FC = () => {
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <span className="badge badge-primary">Dynamic Heatmap Engine</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-Time Cross-District Disparity Analysis</span>
+            <span className="badge badge-primary">
+              {isJobSeeker 
+                ? 'Career Opportunity Matrix' 
+                : isTrainingMgr 
+                ? 'Curriculum Deficit Heatmap' 
+                : 'Dynamic Heatmap Engine'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {isJobSeeker 
+                ? 'Regional Hiring Demand vs Competency Scarcity' 
+                : 'Real-Time Cross-District Disparity Analysis'}
+            </span>
           </div>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
-            Regional Skill Gap & Shortage Heatmap Matrix
+            {isJobSeeker 
+              ? 'Regional Skill Shortages & Opportunity Matrix' 
+              : isTrainingMgr 
+              ? 'District Training Capacity & Skill Deficit Matrix' 
+              : 'Regional Skill Gap & Shortage Heatmap Matrix'}
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Multi-dimensional grid mapping industrial district demand deficits against local training centre capacity.
+            {isJobSeeker
+              ? 'Identify districts where your target skills are critically scarce, creating the highest hiring urgency and compensation potential.'
+              : isTrainingMgr
+              ? 'Identify localized skill shortages where new course batches and training capacity expansions achieve highest placement rates.'
+              : 'Multi-dimensional grid mapping industrial district demand deficits against local training centre capacity.'}
           </p>
         </div>
 
@@ -159,49 +180,49 @@ export const GapHeatmapView: React.FC = () => {
       <div className="grid-4">
         <div className="stat-card stat-critical glass-card">
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
-            Critical Shortage Cells (&gt;+40)
+            {isJobSeeker ? 'High Hiring Demand Clusters (>+40)' : isTrainingMgr ? 'Urgent Training Deficits (>+40)' : 'Critical Shortage Cells (>+40)'}
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ef4444', lineHeight: 1.15, margin: '0.35rem 0' }}>
             18
           </div>
           <div style={{ fontSize: '0.72rem', color: '#dc2626', fontWeight: 500 }}>
-            Immediate CapEx intervention required
+            {isJobSeeker ? 'Fastest interview & placement cycles' : isTrainingMgr ? 'Launch new course batch immediately' : 'Immediate CapEx intervention required'}
           </div>
         </div>
 
         <div className="stat-card stat-warning glass-card">
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
-            Moderate Shortages (+20..+40)
+            {isJobSeeker ? 'Moderate Demand Clusters (+20..+40)' : isTrainingMgr ? 'Moderate Training Needs (+20..+40)' : 'Moderate Shortages (+20..+40)'}
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, color: '#d97706', lineHeight: 1.15, margin: '0.35rem 0' }}>
             22
           </div>
           <div style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 500 }}>
-            Bridge training sufficient
+            {isJobSeeker ? 'Bridge training unlocks opportunities' : isTrainingMgr ? 'Expand course seating quota' : 'Bridge training sufficient'}
           </div>
         </div>
 
         <div className="stat-card stat-success glass-card">
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
-            Balanced Competencies (±10)
+            {isJobSeeker ? 'Competitive Job Markets (±10)' : isTrainingMgr ? 'Adequate Training Supply (±10)' : 'Balanced Competencies (±10)'}
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669', lineHeight: 1.15, margin: '0.35rem 0' }}>
             34
           </div>
           <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 500 }}>
-            Healthy demand-supply parity
+            {isJobSeeker ? 'Balanced candidate supply' : isTrainingMgr ? 'Maintain current batch throughput' : 'Healthy demand-supply parity'}
           </div>
         </div>
 
         <div className="stat-card stat-info glass-card">
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
-            Critical Surplus Cells (&lt;-40)
+            {isJobSeeker ? 'Oversaturated Trades (<-40)' : isTrainingMgr ? 'Oversupplied Trades (<-40)' : 'Critical Surplus Cells (<-40)'}
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563eb', lineHeight: 1.15, margin: '0.35rem 0' }}>
-            6
+            12
           </div>
           <div style={{ fontSize: '0.72rem', color: '#1d4ed8', fontWeight: 500 }}>
-            Automation transition candidates
+            {isJobSeeker ? 'High competition; transition recommended' : isTrainingMgr ? 'Downscale legacy course seats' : 'Redeployment & retargeting needed'}
           </div>
         </div>
       </div>

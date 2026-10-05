@@ -176,8 +176,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return true;
       }
       return false;
-    } catch {
-      showToast('Invalid credentials. Try demo access below.', 'error');
+    } catch (err: any) {
+      const message = err?.message || 'Login failed';
+      if (message === 'Backend unavailable') {
+        showToast('Cannot connect to the server. Please ensure the backend is running.', 'error');
+      } else {
+        showToast(message, 'error');
+      }
       return false;
     }
   };
@@ -258,15 +263,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await api.register(data);
       if (res.user) {
-        setUser(res.user);
-        localStorage.setItem('skillsignal_user', JSON.stringify(res.user));
+        // Real registered users must NOT be marked as demo
+        const realUser = { ...res.user, isDemoAccount: false };
+        setUser(realUser);
+        localStorage.setItem('skillsignal_user', JSON.stringify(realUser));
+        if (res.token) localStorage.setItem('skillsignal_token', res.token);
         showToast('Account created successfully!', 'success');
         setActiveTab('dashboard');
         return true;
       }
       return false;
-    } catch {
-      showToast('Registration failed. Please check input parameters.', 'error');
+    } catch (err: any) {
+      const message = err?.message || 'Registration failed';
+      if (message === 'Backend unavailable') {
+        showToast('Cannot connect to the server. Please ensure the backend is running.', 'error');
+      } else {
+        showToast(message, 'error');
+      }
       return false;
     }
   };

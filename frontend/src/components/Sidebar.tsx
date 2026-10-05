@@ -78,17 +78,17 @@ export const Sidebar: React.FC = () => {
         {
           sectionTitle: 'OVERVIEW',
           items: [
-            { id: 'dashboard', label: 'Training Overview', icon: <LayoutDashboard size={17} /> },
+            { id: 'dashboard', label: 'Training Dashboard', icon: <LayoutDashboard size={17} /> },
           ],
         },
         {
           sectionTitle: 'TRAINING & SKILLS',
           items: [
             { id: 'skills', label: 'Skill Demand', icon: <BrainCircuit size={17} />, badge: '36 Skills', badgeColor: '#7c3aed' },
-            { id: 'districts', label: 'Districts & Capacity', icon: <MapPin size={17} />, badge: 'Capacity', badgeColor: '#0284c7' },
-            { id: 'gaps', label: 'Skill Gap Analysis', icon: <Grid3X3 size={17} />, badge: 'Deficits', badgeColor: '#ef4444' },
-            { id: 'substitution', label: 'Skill Pathways', icon: <GitFork size={17} /> },
+            { id: 'gaps', label: 'Skill Gaps', icon: <Grid3X3 size={17} />, badge: 'Deficits', badgeColor: '#ef4444' },
             { id: 'recommendations', label: 'Course Planning', icon: <Lightbulb size={17} />, badge: 'Batches', badgeColor: '#059669' },
+            { id: 'districts', label: 'District Demand', icon: <MapPin size={17} />, badge: 'Capacity', badgeColor: '#0284c7' },
+            { id: 'substitution', label: 'Career Pathways', icon: <GitFork size={17} />, badge: 'Bridge', badgeColor: '#10b981' },
           ],
         },
         {
@@ -114,7 +114,7 @@ export const Sidebar: React.FC = () => {
       {
         sectionTitle: 'OVERVIEW',
         items: [
-          { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard size={17} /> },
+          { id: 'dashboard', label: 'National Overview', icon: <LayoutDashboard size={17} /> },
         ],
       },
       {

@@ -8,14 +8,21 @@ export const ForgotPasswordView: React.FC = () => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    await api.forgotPassword(email);
-    setLoading(false);
-    setSubmitted(true);
+    setError('');
+    try {
+      await api.forgotPassword(email);
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to process password reset request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,6 +110,11 @@ export const ForgotPasswordView: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {error && (
+              <div style={{ padding: '0.75rem 1rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#991b1b', fontSize: '0.85rem' }}>
+                {error}
+              </div>
+            )}
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.375rem' }}>
                 Email Address

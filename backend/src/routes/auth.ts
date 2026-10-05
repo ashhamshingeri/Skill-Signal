@@ -13,7 +13,82 @@ export const authRouter = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'skillsignal-secret-key-msde-2026';
 const JWT_EXPIRES_IN = '7d';
 
-// Temporary in-memory session store & reset tokens store
+export interface StoredUser {
+  id: string;
+  email: string;
+  password_hash: string;
+  name: string;
+  role: string;
+  organization?: string | null;
+  state_id?: string | null;
+  state_name?: string | null;
+  district_id?: string | null;
+  district_name?: string | null;
+  is_demo_account?: boolean;
+  created_at?: string;
+}
+
+// In-memory persistent fallback repository for local/demo runs when PostgreSQL is not configured
+const memoryUsers: Map<string, StoredUser> = new Map([
+  [
+    'policy@skillsignal.gov.in',
+    {
+      id: 'usr-demo-policy',
+      email: 'policy@skillsignal.gov.in',
+      password_hash: 'SkillSignal@2026',
+      name: 'Dr. Rajesh Verma',
+      role: 'policymaker',
+      organization: 'Ministry of Skill Development & Entrepreneurship',
+      state_name: 'National (All States)',
+      is_demo_account: true,
+      created_at: new Date().toISOString(),
+    },
+  ],
+  [
+    'training@skillsignal.gov.in',
+    {
+      id: 'usr-demo-training',
+      email: 'training@skillsignal.gov.in',
+      password_hash: 'SkillSignal@2026',
+      name: 'Pooja Kulkarni',
+      role: 'training_centre',
+      organization: 'Government ITI Pune & PMKVY Nodal Center',
+      state_name: 'Maharashtra',
+      district_name: 'Pune',
+      is_demo_account: true,
+      created_at: new Date().toISOString(),
+    },
+  ],
+  [
+    'seeker@skillsignal.gov.in',
+    {
+      id: 'usr-demo-seeker',
+      email: 'seeker@skillsignal.gov.in',
+      password_hash: 'SkillSignal@2026',
+      name: 'Amit Deshmukh',
+      role: 'job_seeker',
+      organization: null,
+      state_name: 'Maharashtra',
+      district_name: 'Pune',
+      is_demo_account: true,
+      created_at: new Date().toISOString(),
+    },
+  ],
+  [
+    'admin@skillsignal.gov.in',
+    {
+      id: 'usr-demo-admin',
+      email: 'admin@skillsignal.gov.in',
+      password_hash: 'SkillSignal@2026',
+      name: 'System Administrator',
+      role: 'admin',
+      organization: 'SkillSignal Platform Team',
+      is_demo_account: true,
+      created_at: new Date().toISOString(),
+    },
+  ],
+]);
+
 interface Session {
   id: string;
   userId: string;
@@ -25,6 +100,93 @@ interface Session {
 
 const activeSessions: Map<string, Session> = new Map();
 const passwordResetTokens: Map<string, { userId: string; expiresAt: number }> = new Map();
+
+async function findUserByEmail(email: string): Promise<StoredUser | null> {
+  const normalized = email.toLowerCase().trim();
+  try {
+    const res = await query(
+      `SELECT u.*, s.name as state_name, d.name as district_name 
+       FROM users u 
+       LEFT JOIN states s ON u.state_id = s.id 
+       LEFT JOIN districts d ON u.district_id = d.id 
+       WHERE u.email = $1`,
+      [normalized]
+    );
+    if (res.rows.length > 0) return res.rows[0];
+  } catch (_err) {
+    // Database connection fallback
+  }
+  return memoryUsers.get(normalized) || null;
+}
+
+async function findUserById(id: string): Promise<StoredUser | null> {
+  try {
+    const res = await query(
+      `SELECT u.*, s.name as state_name, d.name as district_name 
+       FROM users u 
+       LEFT JOIN states s ON u.state_id = s.id 
+       LEFT JOIN districts d ON u.district_id = d.id 
+       WHERE u.id = $1`,
+      [id]
+    );
+    if (res.rows.length > 0) return res.rows[0];
+  } catch (_err) {
+    // Database connection fallback
+  }
+  for (const user of memoryUsers.values()) {
+    if (user.id === id) return user;
+  }
+  return null;
+}
+
+async function createStoredUser(data: {
+  email: string;
+  passwordHash: string;
+  name: string;
+  role: string;
+  organization?: string;
+}): Promise<StoredUser> {
+  const normalized = data.email.toLowerCase().trim();
+  try {
+    const res = await query(
+      `INSERT INTO users (email, password_hash, name, role, organization)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, email, name, role, organization, is_demo_account, created_at`,
+      [normalized, data.passwordHash, data.name.trim(), data.role, data.organization || null]
+    );
+    if (res.rows.length > 0) return res.rows[0];
+  } catch (_err) {
+    // Database connection fallback
+  }
+
+  const newUser: StoredUser = {
+    id: uuidv4(),
+    email: normalized,
+    password_hash: data.passwordHash,
+    name: data.name.trim(),
+    role: data.role,
+    organization: data.organization || null,
+    is_demo_account: false,
+    created_at: new Date().toISOString(),
+  };
+  memoryUsers.set(normalized, newUser);
+  return newUser;
+}
+
+async function updatePassword(userId: string, newPasswordHash: string): Promise<boolean> {
+  try {
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
+  } catch (_err) {
+    // Database connection fallback
+  }
+  for (const user of memoryUsers.values()) {
+    if (user.id === userId) {
+      user.password_hash = newPasswordHash;
+      return true;
+    }
+  }
+  return true;
+}
 
 function generateToken(user: { id: string; email: string; role: string; name: string }) {
   return jwt.sign(
@@ -52,7 +214,7 @@ const registerSchema = z.object({
 authRouter.post('/login', asyncHandler(async (req: Request, res: Response) => {
   const { email, password, rememberMe } = req.body;
   const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
-  const userAgent = req.headers['user-agent'] || 'Unknown Browser';
+  const userAgent = (req.headers['user-agent'] as string) || 'Unknown Browser';
 
   if (!email || !password) {
     await logAudit({
@@ -65,16 +227,9 @@ authRouter.post('/login', asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const result = await query(
-    `SELECT u.*, s.name as state_name, d.name as district_name 
-     FROM users u 
-     LEFT JOIN states s ON u.state_id = s.id 
-     LEFT JOIN districts d ON u.district_id = d.id 
-     WHERE u.email = $1`,
-    [email.toLowerCase().trim()]
-  );
+  const user = await findUserByEmail(email);
 
-  if (result.rows.length === 0) {
+  if (!user) {
     await logAudit({
       action: 'LOGIN',
       ip,
@@ -85,14 +240,12 @@ authRouter.post('/login', asyncHandler(async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
-  const user = result.rows[0];
-
   let isValid = false;
   if (user.password_hash.startsWith('$2')) {
     isValid = await bcrypt.compare(password, user.password_hash);
   } else {
-    // Fallback for dev / mock accounts
-    isValid = password === user.password_hash || password === 'Password@123' || password === 'SkillSignal@2026';
+    // Exact plaintext match only for legacy seed/demo accounts
+    isValid = password === user.password_hash;
   }
 
   if (!isValid) {
@@ -151,8 +304,8 @@ authRouter.post('/login', asyncHandler(async (req: Request, res: Response) => {
       stateName: user.state_name,
       districtId: user.district_id,
       districtName: user.district_name,
-      isDemoAccount: user.is_demo_account,
-      isEmailVerified: user.email_verified ?? true,
+      isDemoAccount: user.is_demo_account ?? false,
+      isEmailVerified: true,
     },
     sessionId,
   });
@@ -171,22 +324,22 @@ authRouter.post('/register', asyncHandler(async (req: Request, res: Response) =>
   const { email, password, name, role, organization } = parseResult.data;
   const ip = req.ip || '127.0.0.1';
 
-  const existing = await query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
-  if (existing.rows.length > 0) {
+  const existing = await findUserByEmail(email);
+  if (existing) {
     return res.status(409).json({ error: 'An account with this email already exists' });
   }
 
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
 
-  const result = await query(
-    `INSERT INTO users (email, password_hash, name, role, organization)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, email, name, role, organization, created_at`,
-    [email.toLowerCase().trim(), passwordHash, name.trim(), role, organization || null]
-  );
+  const newUser = await createStoredUser({
+    email,
+    passwordHash,
+    name,
+    role,
+    organization,
+  });
 
-  const newUser = result.rows[0];
   const token = generateToken(newUser);
 
   await logAudit({
@@ -206,10 +359,51 @@ authRouter.post('/register', asyncHandler(async (req: Request, res: Response) =>
       name: newUser.name,
       role: newUser.role,
       organization: newUser.organization,
-      isEmailVerified: false,
+      isDemoAccount: false,
+      isEmailVerified: true,
     },
   });
 }));
+
+// POST /api/auth/demo-login
+authRouter.post('/demo-login', asyncHandler(async (req: Request, res: Response) => {
+  const { role = 'job_seeker' } = req.body;
+  const demoEmail = role === 'policymaker' 
+    ? 'policy@skillsignal.gov.in'
+    : role === 'training_centre'
+    ? 'training@skillsignal.gov.in'
+    : 'seeker@skillsignal.gov.in';
+
+  const user = await findUserByEmail(demoEmail);
+  if (!user) {
+    return res.status(404).json({ error: 'Demo user not found' });
+  }
+
+  const token = generateToken(user);
+  res.cookie('accessToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.json({
+    message: 'Demo login successful',
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      organization: user.organization,
+      stateName: user.state_name,
+      districtName: user.district_name,
+      isDemoAccount: true,
+      isEmailVerified: true,
+    },
+  });
+}));
+
 
 // POST /api/auth/forgot-password (Security-safe, does not reveal if email exists)
 authRouter.post('/forgot-password', asyncHandler(async (req: Request, res: Response) => {
@@ -217,16 +411,16 @@ authRouter.post('/forgot-password', asyncHandler(async (req: Request, res: Respo
   const ip = req.ip || '127.0.0.1';
 
   if (email) {
-    const userRes = await query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
-    if (userRes.rows.length > 0) {
+    const user = await findUserByEmail(email);
+    if (user) {
       const resetToken = uuidv4();
       passwordResetTokens.set(resetToken, {
-        userId: userRes.rows[0].id,
+        userId: user.id,
         expiresAt: Date.now() + 60 * 60 * 1000, // 1 hour
       });
 
       await logAudit({
-        userId: userRes.rows[0].id,
+        userId: user.id,
         action: 'PASSWORD_RESET_REQ',
         ip,
         status: 'SUCCESS',
@@ -257,7 +451,7 @@ authRouter.post('/reset-password', asyncHandler(async (req: Request, res: Respon
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(newPassword, salt);
 
-  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, record.userId]);
+  await updatePassword(record.userId, passwordHash);
   passwordResetTokens.delete(token);
 
   // Invalidate all active sessions for security
@@ -285,15 +479,15 @@ authRouter.post('/change-password', authenticate, asyncHandler(async (req: AuthR
     return res.status(400).json({ error: 'Current password and new password (min 8 chars) required' });
   }
 
-  const userRes = await query('SELECT password_hash FROM users WHERE id = $1', [userId]);
-  if (userRes.rows.length === 0) {
+  const user = await findUserById(userId);
+  if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const hash = userRes.rows[0].password_hash;
+  const hash = user.password_hash;
   const isValid = hash.startsWith('$2')
     ? await bcrypt.compare(currentPassword, hash)
-    : currentPassword === hash || currentPassword === 'Password@123';
+    : currentPassword === hash;
 
   if (!isValid) {
     return res.status(401).json({ error: 'Current password is incorrect' });
@@ -302,7 +496,7 @@ authRouter.post('/change-password', authenticate, asyncHandler(async (req: AuthR
   const salt = await bcrypt.genSalt(10);
   const newHash = await bcrypt.hash(newPassword, salt);
 
-  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, userId]);
+  await updatePassword(userId, newHash);
 
   await logAudit({
     userId,
@@ -324,13 +518,12 @@ authRouter.get('/sessions', authenticate, asyncHandler(async (req: AuthRequest, 
     }
   }
 
-  // Provide fallback mock session if in dev
   if (sessions.length === 0) {
     sessions.push({
       id: 'sess-current',
       userId,
       ip: req.ip || '127.0.0.1',
-      userAgent: req.headers['user-agent'] || 'Chrome / Windows',
+      userAgent: (req.headers['user-agent'] as string) || 'Chrome / Windows',
       createdAt: new Date(Date.now() - 3600000).toISOString(),
       lastActive: new Date().toISOString(),
     });
@@ -367,40 +560,49 @@ authRouter.post('/logout', asyncHandler(async (_req: Request, res: Response) => 
 
 // GET /api/auth/demo-accounts
 authRouter.get('/demo-accounts', asyncHandler(async (_req: Request, res: Response) => {
-  const result = await query(
-    `SELECT id, email, name, role, organization 
-     FROM users 
-     WHERE is_demo_account = true 
-     ORDER BY role`
-  );
+  try {
+    const result = await query(
+      `SELECT id, email, name, role, organization 
+       FROM users 
+       WHERE is_demo_account = true 
+       ORDER BY role`
+    );
 
-  res.json({
-    demoAccounts: result.rows.map(row => ({
-      ...row,
-      defaultPassword: 'Password@123',
-    })),
-  });
+    if (result.rows.length > 0) {
+      return res.json({
+        demoAccounts: result.rows.map(row => ({
+          ...row,
+          defaultPassword: 'SkillSignal@2026',
+        })),
+      });
+    }
+  } catch (_err) {
+    // Database connection fallback
+  }
+
+  const demoAccounts = Array.from(memoryUsers.values())
+    .filter(u => u.is_demo_account)
+    .map(u => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      organization: u.organization,
+      defaultPassword: 'SkillSignal@2026',
+    }));
+
+  res.json({ demoAccounts });
 }));
 
 // GET /api/auth/me
 authRouter.get('/me', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
+  const user = await findUserById(userId);
 
-  const result = await query(
-    `SELECT u.id, u.email, u.name, u.role, u.organization, u.state_id, u.district_id, u.is_demo_account,
-            s.name as state_name, d.name as district_name
-     FROM users u
-     LEFT JOIN states s ON u.state_id = s.id
-     LEFT JOIN districts d ON u.district_id = d.id
-     WHERE u.id = $1`,
-    [userId]
-  );
-
-  if (result.rows.length === 0) {
+  if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const user = result.rows[0];
   res.json({
     user: {
       id: user.id,
@@ -412,7 +614,7 @@ authRouter.get('/me', authenticate, asyncHandler(async (req: AuthRequest, res: R
       stateName: user.state_name,
       districtId: user.district_id,
       districtName: user.district_name,
-      isDemoAccount: user.is_demo_account,
+      isDemoAccount: user.is_demo_account ?? false,
     },
   });
 }));

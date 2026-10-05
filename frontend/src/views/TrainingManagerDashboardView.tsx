@@ -131,6 +131,38 @@ export const TrainingManagerDashboardView: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Central Training Decision Pipeline ───────────────────────── */}
+      <div className="card-white" style={{ padding: '1.25rem 1.5rem', background: 'var(--bg-surface)' }}>
+        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.04em' }}>
+          Training Centre Decision Pipeline: Demand → Skill Gap → Capacity → Course → Batch → Outcome
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setActiveTab('skills')}>
+            <span className="badge badge-primary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>1. Local Demand</span>
+          </div>
+          <ArrowRight size={15} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setActiveTab('gaps')}>
+            <span className="badge badge-critical" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>2. Skill Gap</span>
+          </div>
+          <ArrowRight size={15} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setActiveTab('districts')}>
+            <span className="badge badge-shortage" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>3. Training Capacity</span>
+          </div>
+          <ArrowRight size={15} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setActiveTab('substitution')}>
+            <span className="badge badge-signature" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>4. Course & Curriculum</span>
+          </div>
+          <ArrowRight size={15} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setActiveTab('recommendations')}>
+            <span className="badge badge-balanced" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>5. Batch Sizing</span>
+          </div>
+          <ArrowRight size={15} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span className="badge badge-green" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>6. Placement Outcome</span>
+          </div>
+        </div>
+      </div>
+
       {/* ── 4 KPI Cards for Training Manager ───────────────────────── */}
       <div className="grid-4">
         <div className="card-white" style={{ padding: '1.5rem', borderTop: '3px solid #ef4444' }}>

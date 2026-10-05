@@ -277,7 +277,7 @@ export const JobSeekerDashboardView: React.FC = () => {
             boxShadow: '0 4px 20px rgba(124, 58, 237, 0.08)',
             cursor: 'pointer',
           }}
-          onClick={() => setActiveTab('gaps')}
+          onClick={() => (!targetCareer ? setShowCareerSelector(true) : setActiveTab('gaps'))}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
@@ -288,11 +288,11 @@ export const JobSeekerDashboardView: React.FC = () => {
             </div>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#7c3aed', margin: '0.2rem 0' }}>
-            {readinessScore}%
+            {targetCareer ? `${readinessScore}%` : 'Setup'}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>
-            <CheckCircle2 size={13} />
-            <span>High baseline transferability</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: targetCareer ? '#10b981' : 'var(--text-muted)', fontWeight: 600 }}>
+            {targetCareer ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+            <span>{targetCareer ? (readinessScore >= 60 ? 'Calculated from current skills' : 'Bridge courses needed') : 'Select target career to compute'}</span>
           </div>
         </div>
 
@@ -316,10 +316,10 @@ export const JobSeekerDashboardView: React.FC = () => {
             </div>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0891b2', margin: '0.2rem 0' }}>
-            {selectedCareerMeta.growth}
+            {targetCareer && selectedCareerMeta ? selectedCareerMeta.growth : '--'}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-            1,850+ open vacancies in cluster
+            {targetCareer ? 'Open vacancies in industrial cluster' : 'Choose target career to view demand'}
           </div>
         </div>
 
@@ -343,10 +343,10 @@ export const JobSeekerDashboardView: React.FC = () => {
             </div>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#d97706', margin: '0.2rem 0' }}>
-            {selectedCareerMeta.bridgeWeeks} Wks
+            {targetCareer && selectedCareerMeta ? `${selectedCareerMeta.bridgeWeeks} Wks` : '--'}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
-            PMKVY 4.0 Subsidized bridge
+          <div style={{ fontSize: '0.75rem', color: targetCareer ? '#059669' : 'var(--text-muted)', fontWeight: 600 }}>
+            {targetCareer ? 'PMKVY 4.0 Subsidized bridge duration' : 'Awaiting target career selection'}
           </div>
         </div>
 
@@ -370,10 +370,10 @@ export const JobSeekerDashboardView: React.FC = () => {
             </div>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#10b981', margin: '0.2rem 0' }}>
-            {selectedCareerMeta.wageUplift}
+            {targetCareer && selectedCareerMeta ? selectedCareerMeta.wageUplift : '--'}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>
-            vs traditional mechanical trades
+          <div style={{ fontSize: '0.75rem', color: targetCareer ? '#10b981' : 'var(--text-muted)', fontWeight: 600 }}>
+            {targetCareer ? 'Estimated increase over current base wage' : 'Select target career'}
           </div>
         </div>
       </div>

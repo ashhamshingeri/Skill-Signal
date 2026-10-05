@@ -1,12 +1,34 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import { query } from '../database/connection.js';
 import { asyncHandler } from '../middleware/error-handler.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'skillsignal-secret-key-msde-2026';
+
+function extractUserId(req: any): string | undefined {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      if (decoded?.id) return decoded.id;
+    } catch {}
+  }
+  if (req.cookies && req.cookies.accessToken) {
+    try {
+      const decoded = jwt.verify(req.cookies.accessToken, JWT_SECRET) as any;
+      if (decoded?.id) return decoded.id;
+    } catch {}
+  }
+  return req.query?.userId as string || req.body?.userId as string || undefined;
+}
 
 export const notificationsRouter = Router();
 
 // GET /api/notifications
 notificationsRouter.get('/', asyncHandler(async (req, res) => {
-  const { userId, limit = 20 } = req.query;
+  const userId = extractUserId(req);
+  const limit = parseInt((req.query.limit as string) || '20', 10);
 
   let queryText = `SELECT * FROM notifications `;
   const params: unknown[] = [];
@@ -17,7 +39,7 @@ notificationsRouter.get('/', asyncHandler(async (req, res) => {
   }
 
   queryText += `ORDER BY created_at DESC LIMIT $${params.length + 1}`;
-  params.push(parseInt(limit as string, 10));
+  params.push(limit);
 
   const result = await query(queryText, params);
   const unreadCountResult = await query(
@@ -36,7 +58,7 @@ notificationsRouter.get('/', asyncHandler(async (req, res) => {
       isRead: n.is_read,
       createdAt: n.created_at,
     })),
-    unreadCount: parseInt(unreadCountResult.rows[0].unread_count || '0', 10),
+    unreadCount: parseInt(unreadCountResult.rows[0]?.unread_count || '0', 10),
   });
 }));
 
@@ -51,7 +73,7 @@ notificationsRouter.patch('/:id/read', asyncHandler(async (req, res) => {
 
 // POST /api/notifications/mark-all-read
 notificationsRouter.post('/mark-all-read', asyncHandler(async (req, res) => {
-  const { userId } = req.body;
+  const userId = extractUserId(req);
 
   if (userId) {
     await query('UPDATE notifications SET is_read = true WHERE user_id = $1 OR user_id IS NULL', [userId]);
@@ -61,3 +83,4 @@ notificationsRouter.post('/mark-all-read', asyncHandler(async (req, res) => {
 
   res.json({ success: true, message: 'All notifications marked as read' });
 }));
+

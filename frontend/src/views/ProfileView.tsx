@@ -26,20 +26,22 @@ import {
 export const ProfileView: React.FC = () => {
   const { user, userRole, updateUser, setActiveTab, theme, setTheme, showToast } = useApp();
   const [isEditing, setIsEditing] = useState(false);
+  const isDemo = user?.isDemoAccount ?? false;
+
   const [name, setName] = useState(user?.name || '');
   const [org, setOrg] = useState(user?.organization || '');
-  const [education, setEducation] = useState(user?.education || 'Diploma in Mechanical Engineering');
-  const [currentOccupation, setCurrentOccupation] = useState(user?.currentOccupation || 'Internal Combustion Engine (ICE) Mechanic');
-  const [targetCareer, setTargetCareer] = useState(user?.targetCareer || 'Electric Vehicle Powertrain Diagnostics');
-  const [experienceYears, setExperienceYears] = useState(user?.experienceYears || '3 Years');
-  const [careerInterests, setCareerInterests] = useState(user?.careerInterests?.join(', ') || 'Clean Mobility, Electric Vehicles, Automotive Automation');
+  const [education, setEducation] = useState(user?.education || (isDemo ? 'Diploma in Mechanical Engineering' : ''));
+  const [currentOccupation, setCurrentOccupation] = useState(user?.currentOccupation || (isDemo ? 'Internal Combustion Engine (ICE) Mechanic' : ''));
+  const [targetCareer, setTargetCareer] = useState(user?.targetCareer || (isDemo ? 'Electric Vehicle Powertrain Diagnostics' : ''));
+  const [experienceYears, setExperienceYears] = useState(user?.experienceYears || (isDemo ? '3 Years' : ''));
+  const [careerInterests, setCareerInterests] = useState(user?.careerInterests?.join(', ') || (isDemo ? 'Clean Mobility, Electric Vehicles, Automotive Automation' : ''));
   const [skillsList, setSkillsList] = useState<string[]>(
-    user?.currentSkills || [
+    user?.currentSkills || (isDemo ? [
       'Mechanical chassis assembly & suspension',
       'Braking & regenerative hydraulics',
       'OBD-II diagnostic tools & fault code reading',
       'Workshop safety & high-current protocols',
-    ]
+    ] : [])
   );
   const [newSkillText, setNewSkillText] = useState('');
 
@@ -82,7 +84,11 @@ export const ProfileView: React.FC = () => {
   const isJobSeeker = userRole === 'job_seeker';
   const isTrainingMgr = userRole === 'training_centre';
 
-  const roleBadgeLabel = isJobSeeker ? 'Job Seeker / Candidate' : isTrainingMgr ? 'Training Center Administrator' : 'Government Official';
+  const roleBadgeLabel = isJobSeeker 
+    ? 'Job Seeker / Candidate' 
+    : isTrainingMgr 
+    ? (user?.organization || 'Vocational Training Administrator') 
+    : (user?.organization || 'Workforce Policy Official');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
@@ -165,7 +171,7 @@ export const ProfileView: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-muted)' }}>Location / Cluster</span>
               <strong style={{ color: 'var(--text-primary)' }}>
-                {user?.districtName ? `${user.districtName}, ` : ''}{user?.stateName || 'Karnataka (Bengaluru)'}
+                {user?.districtName ? `${user.districtName}, ` : ''}{user?.stateName || (user?.isDemoAccount ? 'Karnataka (Bengaluru)' : 'National / Unspecified')}
               </strong>
             </div>
           </div>

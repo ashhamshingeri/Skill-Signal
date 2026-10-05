@@ -63,92 +63,41 @@ export function getDataMode(): 'live' | 'prototype' {
 export const api = {
   // ── Authentication ────────────────────────────────────────────────────────
   async login(email: string, password: string, rememberMe = false) {
-    try {
-      return await request<any>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, rememberMe }),
-      });
-    } catch {
-      // Offline demo authentication
-      return {
-        message: 'Login successful (Prototype Mode)',
-        token: 'prototype-session-token',
-        user: {
-          id: 'usr-demo',
-          email,
-          name: email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-          role: 'policymaker' as const,
-          organization: 'Ministry of Skill Development & Entrepreneurship',
-          stateName: 'New Delhi HQ',
-          isDemoAccount: true,
-          isEmailVerified: true,
-        },
-        _dataMode: 'prototype',
-      };
-    }
+    // Auth must NOT silently succeed — propagate errors to caller
+    return await request<any>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, rememberMe }),
+    });
   },
 
   async register(data: { name: string; email: string; password: string; role: string; organization?: string }) {
-    try {
-      return await request<any>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-    } catch {
-      return {
-        message: 'Account created (Prototype Mode — no email sent)',
-        token: 'prototype-session-token',
-        user: {
-          id: `usr-${Date.now()}`,
-          email: data.email,
-          name: data.name,
-          role: data.role as any,
-          organization: data.organization || 'Independent Enterprise',
-          isEmailVerified: false,
-          isDemoAccount: true,
-        },
-        _dataMode: 'prototype',
-      };
-    }
+    // Registration must NOT silently succeed — propagate errors to caller
+    return await request<any>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   async forgotPassword(email: string) {
-    try {
-      return await request<any>('/auth/forgot-password', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
-    } catch {
-      return {
-        message: 'If this email is registered, password reset instructions have been dispatched.',
-        _dataMode: 'prototype',
-      };
-    }
+    return await request<any>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
   },
 
   async resetPassword(token: string, newPassword: string) {
-    try {
-      return await request<any>('/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ token, newPassword }),
-      });
-    } catch {
-      return {
-        message: 'Password has been successfully reset. Please log in with your new password.',
-        _dataMode: 'prototype',
-      };
-    }
+    return await request<any>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    });
   },
 
   async changePassword(currentPassword: string, newPassword: string) {
-    try {
-      return await request<any>('/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-    } catch {
-      return { message: 'Password updated successfully', _dataMode: 'prototype' };
-    }
+    // Password change must NOT silently succeed — propagate errors to caller
+    return await request<any>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
   },
 
   async getSessions() {

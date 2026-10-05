@@ -16,9 +16,12 @@ import {
 } from 'lucide-react';
 
 export const ForecastEngineView: React.FC = () => {
-  const { setActiveTab } = useApp();
+  const { userRole, setActiveTab } = useApp();
   const [horizon, setHorizon] = useState<'3m' | '6m' | '12m'>('6m');
   const [selectedSkill, setSelectedSkill] = useState<string>('ev');
+
+  const isJobSeeker = userRole === 'job_seeker';
+  const isTrainingMgr = userRole === 'training_centre';
 
   const skillOptions = [
     {
@@ -190,14 +193,32 @@ export const ForecastEngineView: React.FC = () => {
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <span className="badge badge-primary">Forecasting Engine v1.0</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Statistical Time-Series & Multi-Factor Decomposition</span>
+            <span className="badge badge-primary">
+              {isJobSeeker 
+                ? 'Career Market Trends' 
+                : isTrainingMgr 
+                ? 'Course Demand Forecast' 
+                : 'Forecasting Engine v1.0'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {isJobSeeker 
+                ? 'Empirical 3-12 Month Industry Growth Outlook' 
+                : 'Statistical Time-Series & Multi-Factor Decomposition'}
+            </span>
           </div>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
-            Skill Demand & Supply Forward Projections
+            {isJobSeeker 
+              ? 'Forward Skill Growth & Market Trajectories' 
+              : isTrainingMgr 
+              ? 'Course Demand & Batch Placement Forecasts' 
+              : 'Skill Demand & Supply Forward Projections'}
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Predicting multi-quarter labour market requirements with 95% confidence intervals and seasonal adjustments.
+            {isJobSeeker
+              ? 'Evaluate 3, 6, and 12-month industry demand growth trajectories to verify high-conviction career choices.'
+              : isTrainingMgr
+              ? 'Forecast forward apprentice and technician hiring curves to plan course launches and batch admissions.'
+              : 'Predicting multi-quarter labour market requirements with 95% confidence intervals and seasonal adjustments.'}
           </p>
         </div>
 
