@@ -49,7 +49,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const res = await fetch(url, { ...options, headers, credentials: 'include' });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || `HTTP ${res.status}`);
+    const errorMessage =
+      (typeof body.error === 'string' ? body.error : null) ||
+      body.message ||
+      (Array.isArray(body.details) ? body.details.join('. ') : null) ||
+      `HTTP ${res.status}`;
+    throw new Error(errorMessage);
   }
   return (await res.json()) as T;
 }
@@ -208,39 +213,43 @@ export const api = {
   },
 
   // ── States & Districts ────────────────────────────────────────────────────
-  // Backend returns a raw array; frontend expects { states: [...] }
   async getStates() {
     try {
       const raw = await request<any[]>('/states');
-      // Backend returns array directly
-      return { states: Array.isArray(raw) ? raw : (raw as any).states || [] };
+      const rawArray = Array.isArray(raw) ? raw : (raw as any).states || [];
+      if (rawArray.length > 0) return { states: rawArray };
+      return { states: MOCK_STATES, _dataMode: 'prototype' };
     } catch {
       return { states: MOCK_STATES, _dataMode: 'prototype' };
     }
   },
 
-  // Backend accepts ?state_id=..., frontend passes stateId
   async getDistricts(stateId?: string) {
     try {
       const q = stateId ? `?state_id=${stateId}` : '';
       const raw = await request<any>(`/districts${q}`);
-      // Backend returns array directly with different field names
       const rawArray = Array.isArray(raw) ? raw : (raw as any).districts || [];
-      return {
-        districts: rawArray.map((d: any) => ({
-          id: d.id,
-          stateId: d.stateId || d.state_id,
-          stateName: d.stateName || d.state_name,
-          name: d.name,
-          code: d.code,
-          latitude: d.latitude,
-          longitude: d.longitude,
-          population: d.population,
-          urbanPercentage: d.urbanPercentage ?? d.urban_percentage ?? 0,
-          coveragePercentage: d.coverage ?? d.coveragePercentage ?? d.coverage_percentage ?? 0,
-          dataQualityScore: d.dataQuality ?? d.dataQualityScore ?? d.data_quality_score ?? 0,
-        })),
-      };
+      if (rawArray.length > 0) {
+        return {
+          districts: rawArray.map((d: any) => ({
+            id: d.id,
+            stateId: d.stateId || d.state_id,
+            stateName: d.stateName || d.state_name,
+            name: d.name,
+            code: d.code,
+            latitude: d.latitude,
+            longitude: d.longitude,
+            population: d.population,
+            urbanPercentage: d.urbanPercentage ?? d.urban_percentage ?? 0,
+            coveragePercentage: d.coverage ?? d.coveragePercentage ?? d.coverage_percentage ?? 0,
+            dataQualityScore: d.dataQuality ?? d.dataQualityScore ?? d.data_quality_score ?? 0,
+          })),
+        };
+      }
+      const filtered = stateId
+        ? MOCK_DISTRICTS.filter(d => d.stateId === stateId)
+        : MOCK_DISTRICTS;
+      return { districts: filtered, _dataMode: 'prototype' };
     } catch {
       const filtered = stateId
         ? MOCK_DISTRICTS.filter(d => d.stateId === stateId)
@@ -250,7 +259,6 @@ export const api = {
   },
 
   // ── Skills ────────────────────────────────────────────────────────────────
-  // Backend accepts ?skill_type=..., frontend passes skillType
   async getSkills(params?: {
     search?: string;
     skillType?: string;
@@ -267,27 +275,38 @@ export const api = {
       if (params?.isGreen !== undefined) q.append('is_green', String(params.isGreen));
       const raw = await request<any>(`/skills?${q.toString()}`);
       const rawArray = Array.isArray(raw) ? raw : (raw as any).skills || [];
-      return { skills: rawArray };
+      if (rawArray.length > 0) return { skills: rawArray };
+      return this.filterMockSkills(params);
     } catch {
-      let filtered = [...MOCK_SKILLS];
-      if (params?.search) {
-        const query = params.search.toLowerCase();
-        filtered = filtered.filter(s => s.name.toLowerCase().includes(query) || s.industry.toLowerCase().includes(query));
-      }
-      if (params?.skillType) {
-        filtered = filtered.filter(s => s.skillType === params.skillType);
-      }
-      if (params?.gapLevel) {
-        filtered = filtered.filter(s => s.gapLevel === params.gapLevel);
-      }
-      if (params?.isGreen) {
-        filtered = filtered.filter(s => s.isGreen);
-      }
-      if (params?.isEmerging) {
-        filtered = filtered.filter(s => s.isEmerging);
-      }
-      return { skills: filtered, _dataMode: 'prototype' };
+      return this.filterMockSkills(params);
     }
+  },
+
+  filterMockSkills(params?: {
+    search?: string;
+    skillType?: string;
+    gapLevel?: string;
+    isEmerging?: boolean;
+    isGreen?: boolean;
+  }) {
+    let filtered = [...MOCK_SKILLS];
+    if (params?.search) {
+      const query = params.search.toLowerCase();
+      filtered = filtered.filter(s => s.name.toLowerCase().includes(query) || s.industry.toLowerCase().includes(query));
+    }
+    if (params?.skillType) {
+      filtered = filtered.filter(s => s.skillType === params.skillType);
+    }
+    if (params?.gapLevel) {
+      filtered = filtered.filter(s => s.gapLevel === params.gapLevel);
+    }
+    if (params?.isGreen) {
+      filtered = filtered.filter(s => s.isGreen);
+    }
+    if (params?.isEmerging) {
+      filtered = filtered.filter(s => s.isEmerging);
+    }
+    return { skills: filtered, _dataMode: 'prototype' };
   },
 
   // ── Gaps & Heatmap ────────────────────────────────────────────────────────
@@ -297,7 +316,23 @@ export const api = {
       if (params?.stateId) q.append('state_id', params.stateId);
       if (params?.districtId) q.append('district_id', params.districtId);
       if (params?.gapLevel) q.append('gap_level', params.gapLevel);
-      return await request<any>(`/gaps?${q.toString()}`);
+      const res = await request<any>(`/gaps?${q.toString()}`);
+      if (res && Array.isArray(res.gaps) && res.gaps.length > 0) return res;
+      return {
+        gaps: MOCK_SKILLS.map(s => ({
+          skillId: s.id,
+          skillName: s.name,
+          skillType: s.skillType,
+          industry: s.industry,
+          demandIndex: s.demandIndex,
+          supplyIndex: s.supplyIndex,
+          gapIndex: s.gapIndex,
+          gapLevel: s.gapLevel,
+          severityScore: Math.abs(s.gapIndex),
+          momentum: s.momentum,
+        })),
+        _dataMode: 'prototype',
+      };
     } catch {
       return {
         gaps: MOCK_SKILLS.map(s => ({
@@ -323,7 +358,61 @@ export const api = {
       const q = new URLSearchParams();
       if (params?.skillId) q.append('skill_id', params.skillId);
       if (params?.districtId) q.append('district_id', params.districtId);
-      return await request<any>(`/forecasts?${q.toString()}`);
+      const res = await request<any>(`/forecasts?${q.toString()}`);
+      if (res && Array.isArray(res.forecasts) && res.forecasts.length > 0) return res;
+      return {
+        forecasts: [
+          {
+            id: 'fc-01',
+            skillName: 'Electric Vehicle Powertrain Diagnostics',
+            districtName: 'Pune',
+            stateName: 'Maharashtra',
+            forecastMonth: '2026-09-01',
+            predictedDemand: 98.4,
+            predictedSupply: 36.2,
+            predictedGap: 62.2,
+            growthRate: 0.52,
+            confidenceScore: 91,
+            confidenceLevel: 'high',
+            confidenceLower: 54.0,
+            confidenceUpper: 70.4,
+            factors: { trend: 0.45, seasonal: 1.15, decay: 0.92, macroWeight: 0.88 },
+          },
+          {
+            id: 'fc-02',
+            skillName: 'Semiconductor VLSI Layout & Verification',
+            districtName: 'Bengaluru Urban',
+            stateName: 'Karnataka',
+            forecastMonth: '2026-09-01',
+            predictedDemand: 96.0,
+            predictedSupply: 31.0,
+            predictedGap: 65.0,
+            growthRate: 0.65,
+            confidenceScore: 89,
+            confidenceLevel: 'high',
+            confidenceLower: 56.5,
+            confidenceUpper: 73.5,
+            factors: { trend: 0.58, seasonal: 1.02, decay: 0.95, macroWeight: 0.94 },
+          },
+          {
+            id: 'fc-03',
+            skillName: 'Solar PV Grid Integration',
+            districtName: 'Ahmedabad',
+            stateName: 'Gujarat',
+            forecastMonth: '2026-09-01',
+            predictedDemand: 89.2,
+            predictedSupply: 46.0,
+            predictedGap: 43.2,
+            growthRate: 0.44,
+            confidenceScore: 87,
+            confidenceLevel: 'high',
+            confidenceLower: 37.0,
+            confidenceUpper: 49.4,
+            factors: { trend: 0.38, seasonal: 1.22, decay: 0.96, macroWeight: 0.85 },
+          },
+        ],
+        _dataMode: 'prototype',
+      };
     } catch {
       return {
         forecasts: [
@@ -389,7 +478,8 @@ export const api = {
       if (params?.stateId) q.append('state_id', params.stateId);
       const raw = await request<any>(`/recommendations?${q.toString()}`);
       const rawArray = Array.isArray(raw) ? raw : (raw as any).recommendations || [];
-      return { recommendations: rawArray };
+      if (rawArray.length > 0) return { recommendations: rawArray };
+      return { recommendations: MOCK_RECOMMENDATIONS, _dataMode: 'prototype' };
     } catch {
       return { recommendations: MOCK_RECOMMENDATIONS, _dataMode: 'prototype' };
     }
@@ -734,7 +824,19 @@ Across **768 tracked districts** and **148 specialized skills**:
   // ── Data Sources ──────────────────────────────────────────────────────────
   async getDataSources() {
     try {
-      return await request<any>('/data-sources');
+      const res = await request<any>('/data-sources');
+      if (res && Array.isArray(res.dataSources) && res.dataSources.length > 0) return res;
+      return {
+        dataSources: MOCK_DATA_SOURCES,
+        summary: {
+          totalSources: 5,
+          liveSources: 4,
+          prototypeSources: 1,
+          totalRecordsIndexed: 37195000,
+          avgQualityScore: '91.8',
+        },
+        _dataMode: 'prototype',
+      };
     } catch {
       return {
         dataSources: MOCK_DATA_SOURCES,

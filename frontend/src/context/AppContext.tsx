@@ -93,11 +93,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   });
 
-  // Default initial active tab: dashboard if logged in, landing if fresh visitor
-  const [activeTab, setActiveTab] = useState<NavTab>(() => {
-    const saved = localStorage.getItem('skillsignal_user');
-    return saved ? 'dashboard' : 'landing';
-  });
+  // Initial active tab: Landing page on app load/start
+  const [activeTab, setActiveTab] = useState<NavTab>('landing');
 
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     return (localStorage.getItem('skillsignal_theme') as ThemeMode) || 'light';

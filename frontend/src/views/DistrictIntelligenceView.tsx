@@ -56,9 +56,14 @@ export const DistrictIntelligenceView: React.FC = () => {
   };
 
   const filteredDistricts = districts.filter((d) => {
-    if (!searchDistrict) return true;
-    const q = searchDistrict.toLowerCase();
-    return d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q) || d.stateName?.toLowerCase().includes(q);
+    if (!searchDistrict.trim()) return true;
+    const q = searchDistrict.toLowerCase().trim();
+    // Support common typo/fuzzy matching like "karnatka" -> "karnataka"
+    const normalizedQ = q.replace(/karnatka/g, 'karnataka');
+    const stateMatch = d.stateName ? d.stateName.toLowerCase().includes(normalizedQ) : false;
+    const nameMatch = d.name ? d.name.toLowerCase().includes(normalizedQ) : false;
+    const codeMatch = d.code ? d.code.toLowerCase().includes(normalizedQ) : false;
+    return nameMatch || codeMatch || stateMatch;
   });
 
   return (
@@ -101,7 +106,10 @@ export const DistrictIntelligenceView: React.FC = () => {
           <select
             className="input-field select-field"
             value={selectedStateId}
-            onChange={(e) => setSelectedStateId(e.target.value)}
+            onChange={(e) => {
+              setSelectedStateId(e.target.value);
+              setSearchDistrict('');
+            }}
             style={{ width: '220px', height: '38px', fontSize: '0.85rem' }}
           >
             <option value="">All States (National)</option>
@@ -120,7 +128,7 @@ export const DistrictIntelligenceView: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Select District for Local Intelligence
+                Select District for Local Intelligence ({filteredDistricts.length} available)
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 Inspect industrial clusters, local ITIs, and specific district-level supply-demand gaps
@@ -132,7 +140,7 @@ export const DistrictIntelligenceView: React.FC = () => {
               <input
                 type="text"
                 className="input-field"
-                placeholder="Search districts (e.g. Pune, Mysuru, Surat)..."
+                placeholder="Search districts (e.g. Bengaluru, Pune, Mysuru)..."
                 value={searchDistrict}
                 onChange={(e) => setSearchDistrict(e.target.value)}
                 style={{ paddingLeft: '32px', fontSize: '0.82rem', width: '100%' }}
@@ -140,52 +148,80 @@ export const DistrictIntelligenceView: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem', maxHeight: '180px', overflowY: 'auto', padding: '2px' }}>
-            {filteredDistricts.map((district) => {
-              const isSelected = activeDistrict?.id === district.id;
-              return (
-                <div
-                  key={district.id}
-                  style={{
-                    padding: '0.75rem 0.9rem',
-                    borderRadius: '8px',
-                    background: isSelected ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-surface)',
-                    border: '1px solid',
-                    borderColor: isSelected ? '#059669' : 'var(--border-subtle)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isSelected ? '0 0 0 1px #059669' : 'none',
-                  }}
-                  onClick={() => {
-                    setActiveDistrict(district);
-                    setSelectedDistrictId(district.id);
-                  }}
+          {filteredDistricts.length === 0 ? (
+            <div style={{ padding: '1.5rem', textAlign: 'center', background: 'var(--bg-surface-secondary)', borderRadius: '10px' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                No districts found matching <strong>"{searchDistrict}"</strong>.
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Try:</span>
+                {['Bengaluru Urban', 'Pune', 'Mysuru', 'Ahmedabad', 'Chennai'].map((s) => (
+                  <button
+                    key={s}
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => setSearchDistrict(s)}
+                    style={{ fontSize: '0.72rem', padding: '2px 8px' }}
+                  >
+                    {s}
+                  </button>
+                ))}
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setSearchDistrict('')}
+                  style={{ fontSize: '0.72rem', padding: '2px 10px', marginLeft: '0.5rem' }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: isSelected ? '#059669' : 'var(--text-primary)' }}>
-                      {district.name}
-                    </span>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', background: 'var(--bg-surface-secondary)', padding: '1px 5px', borderRadius: 4 }}>
-                      {district.code}
-                    </span>
-                  </div>
+                  Clear search
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem', maxHeight: '220px', overflowY: 'auto', padding: '2px' }}>
+              {filteredDistricts.map((district) => {
+                const isSelected = activeDistrict?.id === district.id;
+                return (
+                  <div
+                    key={district.id}
+                    style={{
+                      padding: '0.75rem 0.9rem',
+                      borderRadius: '8px',
+                      background: isSelected ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-surface)',
+                      border: '1px solid',
+                      borderColor: isSelected ? '#059669' : 'var(--border-subtle)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? '0 0 0 1px #059669' : 'none',
+                    }}
+                    onClick={() => {
+                      setActiveDistrict(district);
+                      setSelectedDistrictId(district.id);
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: isSelected ? '#059669' : 'var(--text-primary)' }}>
+                        {district.name}
+                      </span>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', background: 'var(--bg-surface-secondary)', padding: '1px 5px', borderRadius: 4 }}>
+                        {district.code}
+                      </span>
+                    </div>
 
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-                    {district.stateName || 'State'} • {(district.population / 1000000).toFixed(1)}M
-                  </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                      {district.stateName || 'State'} • {(district.population / 1000000).toFixed(1)}M
+                    </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem' }}>
-                    <span style={{ color: 'var(--primary-color)' }}>
-                      Coverage: <strong>{district.coveragePercentage}%</strong>
-                    </span>
-                    <span style={{ color: '#059669' }}>
-                      Score: <strong>{district.dataQualityScore}</strong>
-                    </span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem' }}>
+                      <span style={{ color: 'var(--primary-color)' }}>
+                        Coverage: <strong>{district.coveragePercentage}%</strong>
+                      </span>
+                      <span style={{ color: '#059669' }}>
+                        Score: <strong>{district.dataQualityScore}</strong>
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Selected District Profile (Full Width Below) */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp, type UserRole } from '../context/AppContext';
 import {
   Activity,
@@ -6,6 +6,8 @@ import {
   EyeOff,
   Lock,
   Mail,
+  User,
+  Building,
   ArrowRight,
   ShieldCheck,
   GraduationCap,
@@ -24,12 +26,15 @@ type AuthMode = 'signin' | 'signup';
 type FilterMode = 'live' | 'district' | 'forecast';
 
 export const LoginView: React.FC = () => {
-  const { login, demoLogin } = useApp();
+  const { login, register, demoLogin, showToast } = useApp();
 
   // Form state
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>('job_seeker');
+  const [organization, setOrganization] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -65,8 +70,31 @@ export const LoginView: React.FC = () => {
     e.preventDefault();
     if (!email || !password) return;
     setLoading(true);
-    await login(email, password, rememberMe);
-    setLoading(false);
+    try {
+      if (authMode === 'signup') {
+        if (!name.trim()) {
+          showToast('Please enter your full name', 'error');
+          setLoading(false);
+          return;
+        }
+        if (password.length < 8) {
+          showToast('Password must be at least 8 characters long', 'error');
+          setLoading(false);
+          return;
+        }
+        await register({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          role,
+          organization: organization.trim() || undefined,
+        });
+      } else {
+        await login(email.trim(), password, rememberMe);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDemoLogin = async (role: UserRole) => {
@@ -170,8 +198,72 @@ export const LoginView: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit}>
+            {/* Full Name for Signup */}
+            {authMode === 'signup' && (
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                  Full Name
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User size={15} color="#94a3b8" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                  <input
+                    id="signup-name"
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="e.g. Ashham Shingeri"
+                    required
+                    style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.4rem', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '11px', fontSize: '0.86rem', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => { e.target.style.borderColor = '#7c3aed'; e.target.style.boxShadow = '0 0 0 3px rgba(124,58,237,0.12)'; }}
+                    onBlur={e => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Role Selection for Signup */}
+            {authMode === 'signup' && (
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                  Select Account Role
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+                  {[
+                    { id: 'job_seeker' as UserRole, label: 'Job Seeker', icon: <Briefcase size={13} /> },
+                    { id: 'training_centre' as UserRole, label: 'Training Centre', icon: <GraduationCap size={13} /> },
+                    { id: 'policymaker' as UserRole, label: 'Policymaker', icon: <ShieldCheck size={13} /> },
+                  ].map(r => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setRole(r.id)}
+                      style={{
+                        padding: '0.45rem 0.2rem',
+                        borderRadius: '9px',
+                        border: '1px solid',
+                        borderColor: role === r.id ? '#7c3aed' : '#e2e8f0',
+                        background: role === r.id ? 'rgba(124,58,237,0.08)' : '#fff',
+                        color: role === r.id ? '#7c3aed' : '#64748b',
+                        fontSize: '0.72rem',
+                        fontWeight: role === r.id ? 700 : 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.2rem',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {r.icon}
+                      <span>{r.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Email */}
-            <div style={{ marginBottom: '0.9rem' }}>
+            <div style={{ marginBottom: '0.85rem' }}>
               <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
                 Official / Work Email
               </label>
@@ -191,11 +283,40 @@ export const LoginView: React.FC = () => {
               </div>
             </div>
 
+            {/* Organization for Signup (Optional) */}
+            {authMode === 'signup' && role !== 'job_seeker' && (
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                  Organization / Department (Optional)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Building size={15} color="#94a3b8" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                  <input
+                    id="signup-org"
+                    type="text"
+                    value={organization}
+                    onChange={e => setOrganization(e.target.value)}
+                    placeholder="e.g. Government ITI or State Skill Mission"
+                    style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.4rem', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '11px', fontSize: '0.86rem', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => { e.target.style.borderColor = '#7c3aed'; e.target.style.boxShadow = '0 0 0 3px rgba(124,58,237,0.12)'; }}
+                    onBlur={e => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Password */}
-            <div style={{ marginBottom: '0.9rem' }}>
-              <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
-                Password
-              </label>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                <label style={{ fontSize: '0.76rem', fontWeight: 600, color: '#334155' }}>
+                  Password
+                </label>
+                {authMode === 'signup' && (
+                  <span style={{ fontSize: '0.68rem', color: password.length >= 8 ? '#059669' : '#94a3b8' }}>
+                    Min 8 characters
+                  </span>
+                )}
+              </div>
               <div style={{ position: 'relative' }}>
                 <Lock size={15} color="#94a3b8" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                 <input
@@ -203,7 +324,7 @@ export const LoginView: React.FC = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={authMode === 'signup' ? 'Create a secure password (min 8 chars)' : 'Enter your password'}
                   required
                   style={{ width: '100%', padding: '0.65rem 2.4rem 0.65rem 2.4rem', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '11px', fontSize: '0.86rem', color: '#0f172a', outline: 'none', boxSizing: 'border-box', transition: 'border 0.2s, box-shadow 0.2s' }}
                   onFocus={e => { e.target.style.borderColor = '#7c3aed'; e.target.style.boxShadow = '0 0 0 3px rgba(124,58,237,0.12)'; }}
@@ -215,27 +336,29 @@ export const LoginView: React.FC = () => {
               </div>
             </div>
 
-            {/* Remember me + forgot */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '1.1rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569' }}>
-                <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ accentColor: '#7c3aed', width: '14px', height: '14px', borderRadius: '4px' }} />
-                Keep me signed in
-              </label>
-              <a href="#forgot" onClick={e => { e.preventDefault(); alert('Password reset link dispatched to nodal officer.'); }} style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
-                Forgot password?
-              </a>
-            </div>
+            {/* Remember me + forgot for Sign In */}
+            {authMode === 'signin' && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', marginBottom: '1.1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569' }}>
+                  <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ accentColor: '#7c3aed', width: '14px', height: '14px', borderRadius: '4px' }} />
+                  Keep me signed in
+                </label>
+                <a href="#forgot" onClick={e => { e.preventDefault(); showToast('Password reset link dispatched to nodal officer.', 'info'); }} style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
+                  Forgot password?
+                </a>
+              </div>
+            )}
 
             {/* CTA button */}
             <button
               id="login-submit"
               type="submit"
               disabled={loading}
-              style={{ width: '100%', padding: '0.78rem', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', color: '#fff', border: 'none', borderRadius: '13px', fontSize: '0.93rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 8px 24px rgba(236,72,153,0.32)', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              style={{ width: '100%', padding: '0.78rem', background: 'linear-gradient(135deg,#8b5cf6,#ec4899)', color: '#fff', border: 'none', borderRadius: '13px', fontSize: '0.93rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 8px 24px rgba(236,72,153,0.32)', transition: 'transform 0.15s, box-shadow 0.15s', marginTop: authMode === 'signup' ? '1rem' : '0' }}
               onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 28px rgba(236,72,153,0.42)'; }}}
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(236,72,153,0.32)'; }}
             >
-              {loading ? 'Authenticating…' : 'Enter Intelligence Workspace'}
+              {loading ? (authMode === 'signup' ? 'Creating Account…' : 'Authenticating…') : (authMode === 'signup' ? 'Create Account & Enter' : 'Enter Intelligence Workspace')}
               <ArrowRight size={16} />
             </button>
           </form>
