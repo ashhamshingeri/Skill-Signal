@@ -4,6 +4,8 @@ import { api, getDataMode } from '../services/api';
 import { TrendLineChart } from '../components/Charts/TrendLineChart';
 import { GapBarChart } from '../components/Charts/GapBarChart';
 import { ConfidenceGauge } from '../components/Charts/ConfidenceGauge';
+import { JobSeekerDashboardView } from './JobSeekerDashboardView';
+import { TrainingManagerDashboardView } from './TrainingManagerDashboardView';
 import {
   TrendingUp,
   AlertTriangle,
@@ -20,7 +22,16 @@ import {
 } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
-  const { setActiveTab, selectedStateId, setSelectedStateId, setSelectedSkillId, setSelectedDistrictId } = useApp();
+  const { userRole, setActiveTab, selectedStateId, setSelectedStateId, setSelectedSkillId, setSelectedDistrictId } = useApp();
+
+  if (userRole === 'job_seeker') {
+    return <JobSeekerDashboardView />;
+  }
+
+  if (userRole === 'training_centre') {
+    return <TrainingManagerDashboardView />;
+  }
+
   const [data, setData] = useState<any>(null);
   const [states, setStates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -250,11 +261,10 @@ export const DashboardView: React.FC = () => {
       <div
         className="dark-intelligence-panel"
         style={{
-          padding: '2.25rem',
-          display: 'grid',
-          gridTemplateColumns: '1.5fr 1fr',
-          gap: '2rem',
-          alignItems: 'center',
+          padding: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
         }}
       >
         <div>
@@ -293,7 +303,7 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Telemetry Snapshot Matrix */}
+        {/* Telemetry Snapshot Matrix */}
         <div style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
             <span style={{ color: '#94a3b8' }}>Geographic Cluster</span>
@@ -317,36 +327,41 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Charts Grid: Time Series + Confidence Gauge */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+      {/* Stacked Charts: Macro Time Series + Model Reliability */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <TrendLineChart
           data={macroTrendData}
           title="Macro National Demand vs. Training Supply (Historical + 3-Mo Forecast)"
         />
 
-        <div className="card-white" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
-              Model Reliability Score
-            </h4>
+        <div className="card-white" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                Model Reliability Score
+              </h4>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Multi-source validation and PLFS regression index
+              </div>
+            </div>
             <ConfidenceGauge score={88} label="Statistical Validation" subtext="Multi-factor decomposition" />
           </div>
 
-          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Connected Feeds</span>
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-around', gap: '1rem', fontSize: '0.78rem', flexWrap: 'wrap' }}>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Connected Feeds: </span>
               <strong style={{ color: '#059669' }}>10 Live (NCS & SIDH)</strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Placement Rate</span>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Placement Rate: </span>
               <strong style={{ color: 'var(--accent-purple)' }}>68.4% national avg</strong>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Grid: Top Skill Deficits + Priority Directives */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      {/* Stacked Bottom: Top Skill Deficits + Priority Directives */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <GapBarChart
           items={
             data?.topShortages?.length > 0

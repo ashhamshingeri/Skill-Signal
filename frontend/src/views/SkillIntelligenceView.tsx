@@ -16,16 +16,20 @@ import {
   MapPin,
   HelpCircle,
   Sparkle,
+  Plus,
+  Check,
 } from 'lucide-react';
 
 export const SkillIntelligenceView: React.FC = () => {
-  const { selectedSkillId, setSelectedSkillId, setActiveTab } = useApp();
+  const { user, userRole, selectedSkillId, setSelectedSkillId, setActiveTab, showToast, updateUser } = useApp();
   const [skills, setSkills] = useState<any[]>([]);
   const [activeSkill, setActiveSkill] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedGapFilter, setSelectedGapFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+
+  const isJobSeeker = userRole === 'job_seeker';
 
   useEffect(() => {
     loadSkills();
@@ -85,6 +89,22 @@ export const SkillIntelligenceView: React.FC = () => {
     return <span className="badge badge-surplus">Surplus ({gapIndex.toFixed(0)})</span>;
   };
 
+  // Check if candidate has this skill
+  const candidateHasSkill = user?.currentSkills?.some(s =>
+    activeSkill && (activeSkill.name.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(activeSkill.name.toLowerCase()))
+  );
+
+  const isRelevantToTarget = activeSkill && user?.targetCareer && (
+    (user.targetCareer.includes('EV') && (activeSkill.name.includes('EV') || activeSkill.industry.includes('Auto'))) ||
+    (user.targetCareer.includes('Solar') && (activeSkill.name.includes('Solar') || activeSkill.industry.includes('Renewable'))) ||
+    (user.targetCareer.includes('AI') && (activeSkill.name.includes('AI') || activeSkill.industry.includes('IT'))) ||
+    (user.targetCareer.includes('VLSI') && (activeSkill.name.includes('VLSI') || activeSkill.name.includes('Semiconductor')))
+  );
+
+  const handleAddToLearningPlan = () => {
+    showToast(`Added ${activeSkill?.name} to your career learning plan`, 'success');
+  };
+
   // Trend data for selected skill
   const skillTrendData = [
     { month: 'Oct 25', demand: activeSkill ? activeSkill.demandIndex * 0.7 : 60, supply: activeSkill ? activeSkill.supplyIndex * 0.8 : 45 },
@@ -100,14 +120,21 @@ export const SkillIntelligenceView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* ─── Simplified Header ─── */}
+      {/* ─── Header ─── */}
       <div className="card-white" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+            <span className="badge badge-primary">
+              {isJobSeeker ? 'Career Market Intelligence' : 'Skill Intelligence Taxonomy'}
+            </span>
+          </div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-            Skill Intelligence
+            {isJobSeeker ? 'Market Skills & Career Demand' : 'Skill Intelligence'}
           </h2>
           <p style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--accent-purple)', margin: '0.2rem 0 0.25rem 0' }}>
-            Track which skills are growing, fading, or becoming scarce.
+            {isJobSeeker
+              ? 'Discover which skills have the highest hiring velocity, wage premiums, and relevance to your target career.'
+              : 'Track which skills are growing, fading, or becoming scarce.'}
           </p>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>
             Dynamic taxonomy · Demand velocity · Skill half-life
@@ -120,34 +147,42 @@ export const SkillIntelligenceView: React.FC = () => {
           style={{ gap: '0.4rem' }}
         >
           <Sparkles size={14} />
-          <span>Explore Substitution Pathways</span>
+          <span>{isJobSeeker ? 'Explore Bridge Pathways' : 'Explore Substitution Pathways'}</span>
           <ArrowRight size={14} />
         </button>
       </div>
 
-      {/* ─── Two-Column Desktop Layout (36% Left / 64% Right) ─── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '36% 64%', gap: '1.25rem' }}>
-        {/* Left Column: Skill Explorer */}
-        <div className="card-white" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', maxHeight: '800px' }}>
-          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Explore Skills
+      {/* ─── Up-and-Down Stacked Layout ─── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Top Section: Skill Explorer & Selector Card */}
+        <div className="card-white" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Explore & Select Skill
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Select a skill domain to inspect demand trajectories, half-life decay, and training deficits
+              </div>
+            </div>
+
+            {/* Search bar */}
+            <div style={{ position: 'relative', minWidth: '260px', flex: '1', maxWidth: '380px' }}>
+              <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Search skills, sectors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ paddingLeft: '32px', fontSize: '0.82rem', width: '100%' }}
+              />
+            </div>
           </div>
 
-          {/* Search bar */}
-          <div style={{ position: 'relative' }}>
-            <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search skills, sectors..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: '32px', fontSize: '0.82rem' }}
-            />
-          </div>
-
-          {/* Filter Pills: Type */}
-          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+          {/* Filter Pills */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginRight: '0.25rem' }}>Type:</span>
             {[
               { id: 'all', label: 'All' },
               { id: 'technical', label: 'Technical' },
@@ -160,13 +195,13 @@ export const SkillIntelligenceView: React.FC = () => {
                 key={t.id}
                 onClick={() => setSelectedType(t.id)}
                 style={{
-                  padding: '3px 9px',
+                  padding: '3px 10px',
                   borderRadius: '999px',
                   border: '1px solid',
                   borderColor: selectedType === t.id ? '#7c3aed' : 'var(--border-subtle)',
                   background: selectedType === t.id ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-surface-secondary)',
                   color: selectedType === t.id ? '#7c3aed' : 'var(--text-secondary)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.72rem',
                   fontWeight: selectedType === t.id ? 700 : 500,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
@@ -175,10 +210,8 @@ export const SkillIntelligenceView: React.FC = () => {
                 {t.label}
               </button>
             ))}
-          </div>
 
-          {/* Filter Pills: Gap */}
-          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '0.5rem', marginRight: '0.25rem' }}>Gap:</span>
             {[
               { id: 'all', label: 'All gaps' },
               { id: 'critical_shortage', label: 'Critical' },
@@ -190,13 +223,13 @@ export const SkillIntelligenceView: React.FC = () => {
                 key={g.id}
                 onClick={() => setSelectedGapFilter(g.id)}
                 style={{
-                  padding: '3px 9px',
+                  padding: '3px 10px',
                   borderRadius: '999px',
                   border: '1px solid',
                   borderColor: selectedGapFilter === g.id ? '#0284c7' : 'var(--border-subtle)',
                   background: selectedGapFilter === g.id ? 'rgba(2, 132, 199, 0.1)' : 'var(--bg-surface-secondary)',
                   color: selectedGapFilter === g.id ? '#0284c7' : 'var(--text-secondary)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.72rem',
                   fontWeight: selectedGapFilter === g.id ? 700 : 500,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
@@ -207,60 +240,45 @@ export const SkillIntelligenceView: React.FC = () => {
             ))}
           </div>
 
-          {/* Skill List Items */}
-          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1, paddingRight: '2px' }}>
+          {/* Horizontal / Grid of Skill Selection Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.6rem', maxHeight: '180px', overflowY: 'auto', padding: '2px' }}>
             {filteredSkills.map((skill) => {
               const isSelected = activeSkill?.id === skill.id;
               return (
                 <div
                   key={skill.id}
                   style={{
-                    padding: '0.75rem',
+                    padding: '0.75rem 0.9rem',
                     borderRadius: '10px',
                     background: isSelected ? 'rgba(124, 58, 237, 0.08)' : 'var(--bg-surface)',
                     border: '1px solid',
-                    borderColor: isSelected ? 'rgba(124, 58, 237, 0.35)' : 'var(--border-subtle)',
+                    borderColor: isSelected ? '#7c3aed' : 'var(--border-subtle)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                     position: 'relative',
+                    boxShadow: isSelected ? '0 0 0 1px #7c3aed' : 'none',
                   }}
                   onClick={() => {
                     setActiveSkill(skill);
                     setSelectedSkillId(skill.id);
                   }}
                 >
-                  {isSelected && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: '15%',
-                        bottom: '15%',
-                        width: '3px',
-                        background: 'var(--accent-purple)',
-                        borderRadius: '0 4px 4px 0',
-                      }}
-                    />
-                  )}
-
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: isSelected ? '#7c3aed' : 'var(--text-primary)' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.82rem', color: isSelected ? '#7c3aed' : 'var(--text-primary)' }}>
                       {skill.name}
                     </span>
                     <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7c3aed' }}>
-                      +{skill.demandIndex}% demand
+                      +{skill.demandIndex}%
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                     {skill.industry}
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                      {getSkillTypeBadge(skill.skillType)}
-                      {getGapBadge(skill.gapLevel, skill.gapIndex)}
-                    </div>
+                  <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                    {getSkillTypeBadge(skill.skillType)}
+                    {getGapBadge(skill.gapLevel, skill.gapIndex)}
                   </div>
                 </div>
               );
@@ -268,11 +286,11 @@ export const SkillIntelligenceView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Selected Skill Deep-Dive */}
+        {/* Selected Skill Deep-Dive (Full Width Below) */}
         {activeSkill ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Selected Skill Header & What This Means */}
-            <div className="card-white" style={{ padding: '1.35rem' }}>
+            <div className="card-white" style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <div>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginBottom: '0.2rem' }}>
@@ -289,57 +307,74 @@ export const SkillIntelligenceView: React.FC = () => {
                 {getGapBadge(activeSkill.gapLevel, activeSkill.gapIndex)}
               </div>
 
-              {/* What this means explanation */}
-              <div style={{ background: 'rgba(124, 58, 237, 0.05)', border: '1px solid rgba(124, 58, 237, 0.15)', borderRadius: '10px', padding: '0.65rem 0.9rem', marginBottom: '1.1rem' }}>
-                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#7c3aed', letterSpacing: '0.04em', marginBottom: '2px' }}>
-                  WHAT THIS MEANS
+              {/* What this means / Career Impact Explanation */}
+              <div style={{ background: 'rgba(124, 58, 237, 0.05)', border: '1px solid rgba(124, 58, 237, 0.15)', borderRadius: '10px', padding: '0.75rem 0.95rem', marginBottom: '1.1rem' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#7c3aed', letterSpacing: '0.04em', marginBottom: '3px' }}>
+                  {isJobSeeker ? 'WHY THIS MATTERS FOR YOUR CAREER' : 'WHAT THIS MEANS'}
                 </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-                  {activeSkill.gapLevel === 'critical_shortage' || activeSkill.gapLevel === 'shortage'
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                  {isJobSeeker
+                    ? isRelevantToTarget
+                      ? `This skill is directly required for your target career (${user?.targetCareer || 'EV Diagnostics'}). Acquiring it bridges a primary qualification deficit and unlocks higher-tier positions with strong salary premiums.`
+                      : candidateHasSkill
+                      ? `You currently hold verified competencies related to this skill. It strengthens your foundational score for technical transitions.`
+                      : `Employer hiring demand is rising +${activeSkill.demandIndex}% YoY with an acute talent deficit in industrial clusters. Adding this competency improves your resume competitiveness.`
+                    : activeSkill.gapLevel === 'critical_shortage' || activeSkill.gapLevel === 'shortage'
                     ? `Employer demand is rising faster than available training supply. High vacancy risk in industrial clusters.`
                     : activeSkill.gapLevel === 'balanced'
                     ? `Training capacity is aligned with industry hiring pace across active districts.`
                     : `Supply exceeds current hiring demand. Opportunity to pivot workforce to adjacent high-growth pathways.`}
                 </p>
+
+                {isJobSeeker && (
+                  <div style={{ marginTop: '0.65rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(124, 58, 237, 0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
+                    <span>
+                      Target Relevance: <strong style={{ color: isRelevantToTarget ? '#7c3aed' : 'var(--text-secondary)' }}>{isRelevantToTarget ? 'Direct Match (High Priority)' : 'Complementary'}</strong>
+                    </span>
+                    <span>
+                      Status: <strong style={{ color: candidateHasSkill ? '#10b981' : '#d97706' }}>{candidateHasSkill ? 'Preserved Competency' : 'Identified Skill Gap'}</strong>
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* 3 Metric Cards: Half-Life, Velocity, Net Gap */}
               <div className="grid-3">
-                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.85rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.2rem' }}>
-                    <Clock size={14} color="#d97706" />
-                    <span>Half-Life</span>
+                <div className="stat-card stat-warning" style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '1rem 1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    <Clock size={15} color="#d97706" />
+                    <span>Skill Half-Life</span>
                   </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#d97706', lineHeight: 1.1 }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#d97706', lineHeight: 1.15, margin: '0.25rem 0' }}>
                     {activeSkill.halfLifeMonths} months
                   </div>
-                  <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                     {activeSkill.halfLifeMonths <= 20 ? 'Fast curriculum turnover needed' : 'Stable industrial lifespan'}
                   </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.85rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.2rem' }}>
-                    <TrendingUp size={14} color="#0891b2" />
+                <div className="stat-card stat-info" style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '1rem 1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    <TrendingUp size={15} color="#0891b2" />
                     <span>Demand Velocity</span>
                   </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0891b2', lineHeight: 1.1 }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0891b2', lineHeight: 1.15, margin: '0.25rem 0' }}>
                     {activeSkill.momentum}×
                   </div>
-                  <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                     vs national median growth
                   </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.85rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.2rem' }}>
-                    <AlertOctagon size={14} color={activeSkill.gapIndex > 0 ? '#ef4444' : '#10b981'} />
-                    <span>Net Gap Index</span>
+                <div className={`stat-card ${activeSkill.gapIndex > 0 ? 'stat-critical' : 'stat-success'}`} style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '1rem 1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    <AlertOctagon size={15} color={activeSkill.gapIndex > 0 ? '#ef4444' : '#10b981'} />
+                    <span>Net Market Deficit</span>
                   </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: activeSkill.gapIndex > 0 ? '#ef4444' : '#10b981', lineHeight: 1.1 }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: activeSkill.gapIndex > 0 ? '#ef4444' : '#059669', lineHeight: 1.15, margin: '0.25rem 0' }}>
                     {activeSkill.gapIndex > 0 ? `+${activeSkill.gapIndex.toFixed(1)}` : activeSkill.gapIndex.toFixed(1)}
                   </div>
-                  <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                     {activeSkill.gapLevel === 'critical_shortage' ? 'Critical shortage' : activeSkill.gapLevel}
                   </div>
                 </div>
@@ -367,32 +402,59 @@ export const SkillIntelligenceView: React.FC = () => {
             >
               <div>
                 <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7c3aed', letterSpacing: '0.04em', marginBottom: '2px' }}>
-                  RECOMMENDED NEXT STEP
+                  {isJobSeeker ? 'RECOMMENDED ACTION FOR YOU' : 'RECOMMENDED NEXT STEP'}
                 </div>
                 <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  Expand {activeSkill.name} training capacity in high-gap districts.
+                  {isJobSeeker
+                    ? `Explore career pathways and bridge training modules covering ${activeSkill.name}.`
+                    : `Expand ${activeSkill.name} training capacity in high-gap districts.`}
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.6rem' }}>
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => setActiveTab('districts')}
-                >
-                  <MapPin size={13} />
-                  <span>View District Gaps</span>
-                </button>
+                {isJobSeeker ? (
+                  <>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleAddToLearningPlan}
+                    >
+                      <Plus size={13} />
+                      <span>Add to Learning Plan</span>
+                    </button>
 
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => {
-                    setSelectedSkillId(activeSkill.id);
-                    setActiveTab('substitution');
-                  }}
-                >
-                  <GitFork size={13} />
-                  <span>Explore Substitution</span>
-                </button>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        setSelectedSkillId(activeSkill.id);
+                        setActiveTab('substitution');
+                      }}
+                    >
+                      <GitFork size={13} />
+                      <span>View Pathway</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setActiveTab('districts')}
+                    >
+                      <MapPin size={13} />
+                      <span>View District Gaps</span>
+                    </button>
+
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        setSelectedSkillId(activeSkill.id);
+                        setActiveTab('substitution');
+                      }}
+                    >
+                      <GitFork size={13} />
+                      <span>Explore Substitution</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -416,4 +478,3 @@ export const SkillIntelligenceView: React.FC = () => {
 };
 
 export default SkillIntelligenceView;
-

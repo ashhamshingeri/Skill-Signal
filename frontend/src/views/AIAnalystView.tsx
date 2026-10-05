@@ -17,6 +17,7 @@ import {
   Compass,
   CheckCircle2,
   ArrowRight,
+  BookOpen,
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -183,7 +184,7 @@ function renderFormattedText(text: string): React.ReactNode {
 }
 
 // ── Quick Prompt Pills ───────────────────────────────────────────────────────
-const QUICK_PROMPTS = [
+const POLICY_QUICK_PROMPTS = [
   { icon: Zap, label: 'EV Shortages in Pune', query: 'What are the critical EV shortages in Pune industrial cluster?' },
   { icon: Cpu, label: 'Semiconductor VLSI Hubs', query: 'Show 6-month forecast for Semiconductor VLSI in Bengaluru.' },
   { icon: Compass, label: 'Maharashtra Tier-2 Momentum', query: 'Which Tier-2 districts in Maharashtra show the highest emerging skill momentum?' },
@@ -192,16 +193,53 @@ const QUICK_PROMPTS = [
   { icon: TrendingUp, label: 'Skill Half-Life Telemetry', query: 'Which skills have the shortest half-life and require urgent curriculum refresh?' },
 ];
 
+const JOB_SEEKER_QUICK_PROMPTS = [
+  { icon: Zap, label: 'Skills for EV Career', query: 'What skills should I learn for an EV career?' },
+  { icon: RotateCcw, label: 'My Missing Skills for EV', query: 'What skills am I missing for EV Powertrain Diagnostics?' },
+  { icon: Compass, label: 'Closest Career to Me', query: 'Which career is closest to my current mechanical skills?' },
+  { icon: TrendingUp, label: 'What Should I Learn Next?', query: 'What should I learn next to increase my earning potential?' },
+  { icon: Sun, label: 'Fastest Growing Skills', query: 'Which skills are growing fastest in market demand right now?' },
+  { icon: BookOpen, label: 'ICE to EV Bridge Pathway', query: 'What career pathways fit an ICE mechanic background?' },
+];
+
 export const AIAnalystView: React.FC = () => {
   const { user, userRole, selectedStateId, selectedDistrictId } = useApp();
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const initialMessage: ChatMessage = {
-    id: 'msg-init',
-    sender: 'ai',
-    text: `### 🇮🇳 Welcome${user?.name ? `, ${user.name}` : ''} to SkillSignal AI Policy Analyst
+  const isJobSeeker = userRole === 'job_seeker';
+  const isTrainingMgr = userRole === 'training_centre';
+
+  const initialMessage: ChatMessage = isJobSeeker
+    ? {
+        id: 'msg-init',
+        sender: 'ai',
+        text: `### ⚡ Welcome${user?.name ? `, ${user.name}` : ''} to SkillSignal AI Career Advisor
+
+I am your personalized career transition copilot, powered by real-time labour market telemetry from **2.8M+ job postings**, **148 specialized skills**, and national training registries.
+
+#### How I can help your career today:
+- 🎯 **Skill Gap Analysis**: Pinpoint exactly what competencies you need for **${user?.targetCareer || 'EV Powertrain Diagnostics'}**.
+- 🔄 **Career Transition Pathways**: Find fast **2 to 8-week bridge courses** that build directly on your **${user?.currentOccupation || 'ICE mechanical'}** background.
+- 📈 **Market Demand & Salary Insights**: Discover where employers in your region are hiring with wage premiums.
+- 📚 **Personalized Learning Steps**: Guidance on certifications (ASDC, SCGJ), simulators, and hands-on projects.
+
+*Type any question below or click a recommended prompt to get started!*`,
+        confidence: 98,
+        dataSources: ['National Career Service (NCS)', 'Skill India Digital Hub (SIDH)', 'Automotive Skills Registry'],
+        suggestedFollowUps: [
+          'What skills should I learn for an EV career?',
+          'What skills am I missing for EV Powertrain Diagnostics?',
+          'Which career is closest to my current mechanical skills?',
+          'What career pathways fit an ICE mechanic background?',
+        ],
+        timestamp: 'Live Session',
+      }
+    : {
+        id: 'msg-init',
+        sender: 'ai',
+        text: `### 🇮🇳 Welcome${user?.name ? `, ${user.name}` : ''} to SkillSignal AI Policy Analyst
 
 I am grounded in empirical labour-market telemetry from **768 districts**, **148 specialized skills**, and national data streams including the **National Career Service (NCS)**, **Skill India Digital Hub (SIDH)**, and the **Periodic Labour Force Survey (PLFS)**.
 
@@ -210,16 +248,18 @@ I am grounded in empirical labour-market telemetry from **768 districts**, **148
 - **Dynamic Skill Substitution**: Competency overlaps, bridge course duration, and reskilling pathways.
 - **6 to 12-Month Demand Projections**: Machine learning forecasts with confidence intervals.
 - **PMKVY 4.0 / ITI Interventions**: High-impact training batch allocations and CapEx recommendations.`,
-    confidence: 96,
-    dataSources: ['National Career Service (NCS)', 'Skill India Digital Hub (SIDH)', 'PLFS Survey 2025-26'],
-    suggestedFollowUps: [
-      'What are the critical EV shortages in Pune industrial cluster?',
-      'Which Tier-2 districts in Maharashtra show the highest emerging skill momentum?',
-      'What are the substitution pathways for ICE mechanics into EV diagnostics?',
-      'Show 12-month demand forecast with confidence intervals for Semiconductor VLSI.',
-    ],
-    timestamp: 'Live Session',
-  };
+        confidence: 96,
+        dataSources: ['National Career Service (NCS)', 'Skill India Digital Hub (SIDH)', 'PLFS Survey 2025-26'],
+        suggestedFollowUps: [
+          'What are the critical EV shortages in Pune industrial cluster?',
+          'Which Tier-2 districts in Maharashtra show the highest emerging skill momentum?',
+          'What are the substitution pathways for ICE mechanics into EV diagnostics?',
+          'Show 12-month demand forecast with confidence intervals for Semiconductor VLSI.',
+        ],
+        timestamp: 'Live Session',
+      };
+
+  const quickPrompts = isJobSeeker ? JOB_SEEKER_QUICK_PROMPTS : POLICY_QUICK_PROMPTS;
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
 
@@ -319,13 +359,13 @@ I am grounded in empirical labour-market telemetry from **768 districts**, **148
           </div>
           <div>
             <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: 1.2 }}>
-              AI Policy Analyst & Natural Language Engine
+              {isJobSeeker ? 'AI Career Advisor & Skills Copilot' : isTrainingMgr ? 'AI Training & Course Planning Advisor' : 'AI Policy Analyst & Natural Language Engine'}
             </h2>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>Deterministic Intent Engine</span>
+              <span>{isJobSeeker ? 'Personalized Career Guidance' : 'Deterministic Intent Engine'}</span>
               <span>•</span>
               <span style={{ color: 'var(--accent-emerald)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                <CheckCircle2 size={11} /> Grounded in Empirical Labour Telemetry
+                <CheckCircle2 size={11} /> {isJobSeeker ? 'Live Hiring & Transition Telemetry' : 'Grounded in Empirical Labour Telemetry'}
               </span>
             </div>
           </div>
@@ -333,7 +373,7 @@ I am grounded in empirical labour-market telemetry from **768 districts**, **148
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="badge badge-emerging" style={{ fontSize: '0.72rem' }}>
-            <Sparkles size={11} /> Role: {userRole.toUpperCase()}
+            <Sparkles size={11} /> {isJobSeeker ? 'Candidate View' : `Role: ${userRole.toUpperCase()}`}
           </span>
           <button
             className="btn btn-ghost btn-sm"
@@ -357,7 +397,7 @@ I am grounded in empirical labour-market telemetry from **768 districts**, **148
           scrollbarWidth: 'none',
         }}
       >
-        {QUICK_PROMPTS.map((qp, idx) => {
+        {quickPrompts.map((qp, idx) => {
           const IconComponent = qp.icon;
           return (
             <button
@@ -590,7 +630,11 @@ I am grounded in empirical labour-market telemetry from **768 districts**, **148
         <input
           type="text"
           className="input-field"
-          placeholder="Ask a policy question (e.g. 'Compare solar technician shortages in Gujarat vs Rajasthan', 'What is the EV half-life?')..."
+          placeholder={
+            isJobSeeker
+              ? "Ask a career question (e.g. 'What skills should I learn for an EV career?', 'What is my fastest transition pathway?')..."
+              : "Ask a policy question (e.g. 'Compare solar technician shortages in Gujarat vs Rajasthan', 'What is the EV half-life?')..."
+          }
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}

@@ -202,6 +202,38 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-medium);
 }
 
+.stat-card {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: var(--radius-lg);
+  min-height: 105px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.stat-card.stat-critical {
+  border-left: 4px solid #ef4444;
+}
+
+.stat-card.stat-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.stat-card.stat-success {
+  border-left: 4px solid #10b981;
+}
+
+.stat-card.stat-ai {
+  border-left: 4px solid #8b5cf6;
+}
+
+.stat-card.stat-info {
+  border-left: 4px solid #3b82f6;
+}
+
 .glass-panel {
   background: var(--bg-glass);
   backdrop-filter: blur(16px);
@@ -538,9 +570,19 @@ h1, h2, h3, h4, h5, h6 {
   gap: 1.25rem;
 }
 
+.forecast-grid-layout {
+  display: grid;
+  grid-template-columns: 1.75fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
 @media (max-width: 1024px) {
   .grid-3, .grid-4 {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .forecast-grid-layout {
+    grid-template-columns: 1fr !important;
   }
 }
 @media (max-width: 640px) {

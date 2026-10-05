@@ -25,8 +25,8 @@ export const GapBarChart: React.FC<GapBarChartProps> = ({
     <div className="glass-card" style={{ padding: '1.25rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <div>
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>{title}</h4>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Demand (Blue) vs. Training Output (Green) vs. Gap Deficit</span>
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h4>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Demand (Blue) vs. Training Output (Green) vs. Gap Deficit</span>
         </div>
       </div>
 
@@ -38,7 +38,7 @@ export const GapBarChart: React.FC<GapBarChartProps> = ({
           return (
             <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                <span style={{ fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '70%' }}>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '70%' }}>
                   {item.name}
                 </span>
                 <span
@@ -55,7 +55,7 @@ export const GapBarChart: React.FC<GapBarChartProps> = ({
               <div
                 style={{
                   height: '8px',
-                  background: 'rgba(255, 255, 255, 0.06)',
+                  background: 'var(--bg-surface-secondary)',
                   borderRadius: '999px',
                   overflow: 'hidden',
                   position: 'relative',
@@ -74,9 +74,9 @@ export const GapBarChart: React.FC<GapBarChartProps> = ({
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
-                <span>Demand: <strong style={{ color: '#94a3b8' }}>{item.demandIndex}</strong></span>
-                <span>Supply: <strong style={{ color: '#94a3b8' }}>{item.supplyIndex}</strong></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                <span>Demand: <strong style={{ color: 'var(--text-secondary)' }}>{item.demandIndex}</strong></span>
+                <span>Supply: <strong style={{ color: 'var(--text-secondary)' }}>{item.supplyIndex}</strong></span>
                 <span>Gap Severity: <strong style={{ color: isShortage ? '#fb923c' : '#34d399' }}>{gapPercent.toFixed(0)}%</strong></span>
               </div>
             </div>

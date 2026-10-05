@@ -29,6 +29,14 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   organization?: string;
+  education?: string;
+  currentOccupation?: string;
+  targetCareer?: string;
+  currentSkills?: string[];
+  skillProficiencies?: Record<string, 'beginner' | 'intermediate' | 'advanced'>;
+  experienceYears?: string | number;
+  careerInterests?: string[];
+  certifications?: string[];
   stateId?: string;
   stateName?: string;
   districtId?: string;
@@ -50,6 +58,7 @@ interface AppContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
+  updateUser: (updates: Partial<UserProfile>) => void;
   selectedStateId: string;
   setSelectedStateId: (id: string) => void;
   selectedDistrictId: string;
@@ -68,7 +77,7 @@ interface AppContextType {
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   login: (email: string, pass: string, remember?: boolean) => Promise<boolean>;
   demoLogin: (role: UserRole) => void;
-  register: (data: { name: string; email: string; password: string; role: UserRole; organization?: string }) => Promise<boolean>;
+  register: (data: { name: string; email: string; password: string; role: UserRole; organization?: string; education?: string; currentOccupation?: string; targetCareer?: string }) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -204,7 +213,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         name: 'Aakash Sharma',
         email: 'aakash.sharma@skillsignal.in',
         role: 'job_seeker',
-        organization: 'ITI Mechanical Graduate',
+        education: 'Diploma in Mechanical Engineering',
+        currentOccupation: 'Internal Combustion Engine (ICE) Mechanic',
+        targetCareer: 'Electric Vehicle Powertrain Diagnostics',
+        experienceYears: '3 Years',
+        currentSkills: [
+          'Mechanical chassis assembly & suspension',
+          'Braking & regenerative hydraulics',
+          'OBD-II diagnostic tools & fault code reading',
+          'Workshop safety & high-current protocols',
+        ],
+        skillProficiencies: {
+          'Mechanical chassis assembly & suspension': 'advanced',
+          'Braking & regenerative hydraulics': 'advanced',
+          'OBD-II diagnostic tools & fault code reading': 'intermediate',
+          'Workshop safety & high-current protocols': 'intermediate',
+        },
+        careerInterests: ['Clean Mobility', 'Electric Vehicles', 'Automotive Automation'],
+        certifications: ['Automotive Service Technician (Level 4)', 'Safety Protocol Clearance'],
         stateName: 'Karnataka',
         districtName: 'Bengaluru Urban',
         isDemoAccount: true,
@@ -228,7 +254,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('dashboard');
   };
 
-  const register = async (data: { name: string; email: string; password: string; role: UserRole; organization?: string }): Promise<boolean> => {
+  const register = async (data: { name: string; email: string; password: string; role: UserRole; organization?: string; education?: string; currentOccupation?: string; targetCareer?: string }): Promise<boolean> => {
     try {
       const res = await api.register(data);
       if (res.user) {
@@ -255,10 +281,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setUserRole = (newRole: UserRole) => {
     if (user) {
-      const updated = { ...user, role: newRole };
+      const updated: UserProfile = { ...user, role: newRole };
+      // Provide appropriate defaults if switching role in demo
+      if (newRole === 'job_seeker' && !updated.currentOccupation) {
+        updated.education = 'Diploma in Mechanical Engineering';
+        updated.currentOccupation = 'Internal Combustion Engine (ICE) Mechanic';
+        updated.targetCareer = 'Electric Vehicle Powertrain Diagnostics';
+        updated.currentSkills = [
+          'Mechanical chassis assembly & suspension',
+          'Braking & regenerative hydraulics',
+          'OBD-II diagnostic tools & fault code reading',
+          'Workshop safety & high-current protocols',
+        ];
+        updated.skillProficiencies = {
+          'Mechanical chassis assembly & suspension': 'advanced',
+          'Braking & regenerative hydraulics': 'advanced',
+          'OBD-II diagnostic tools & fault code reading': 'intermediate',
+          'Workshop safety & high-current protocols': 'intermediate',
+        };
+      }
       setUser(updated);
       localStorage.setItem('skillsignal_user', JSON.stringify(updated));
       showToast(`Switched workspace role to ${newRole.toUpperCase()}`, 'info');
+    }
+  };
+
+  const updateUser = (updates: Partial<UserProfile>) => {
+    if (user) {
+      const updated = { ...user, ...updates };
+      setUser(updated);
+      localStorage.setItem('skillsignal_user', JSON.stringify(updated));
+      showToast('Profile updated successfully', 'success');
     }
   };
 
@@ -287,6 +340,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTheme,
         toasts,
         showToast,
+        updateUser,
         login,
         demoLogin,
         register,

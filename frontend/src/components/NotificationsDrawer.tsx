@@ -48,13 +48,14 @@ export const NotificationsDrawer: React.FC = () => {
           right: '1.5rem',
           width: '380px',
           maxHeight: '520px',
-          background: '#0f172a',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
           borderRadius: '16px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+          boxShadow: 'var(--shadow-xl)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          backdropFilter: 'blur(16px)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -69,8 +70,8 @@ export const NotificationsDrawer: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Bell size={18} color="#38bdf8" />
-            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#f8fafc' }}>
+            <Bell size={18} color="var(--primary-color)" />
+            <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
               Alerts & Notifications
             </span>
             {unreadCount > 0 && (
@@ -92,7 +93,7 @@ export const NotificationsDrawer: React.FC = () => {
             )}
             <button
               onClick={() => setNotificationsOpen(false)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
             >
               <X size={16} />
             </button>
@@ -102,7 +103,7 @@ export const NotificationsDrawer: React.FC = () => {
         {/* Notifications List */}
         <div style={{ overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {notifications.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
               No notifications at this time
             </div>
           ) : (
@@ -116,9 +117,9 @@ export const NotificationsDrawer: React.FC = () => {
                   style={{
                     padding: '0.75rem',
                     borderRadius: '8px',
-                    background: n.isRead ? 'rgba(255, 255, 255, 0.02)' : 'rgba(56, 189, 248, 0.08)',
+                    background: n.isRead ? 'transparent' : 'rgba(56, 189, 248, 0.08)',
                     border: '1px solid',
-                    borderColor: n.isRead ? 'transparent' : 'rgba(56, 189, 248, 0.25)',
+                    borderColor: n.isRead ? 'var(--border-subtle)' : 'rgba(56, 189, 248, 0.25)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
@@ -132,21 +133,21 @@ export const NotificationsDrawer: React.FC = () => {
                   <div style={{ display: 'flex', gap: '0.625rem' }}>
                     <div style={{ marginTop: '2px' }}>
                       {isShortage ? (
-                        <AlertTriangle size={16} color="#f87171" />
+                        <AlertTriangle size={16} color="#ef4444" />
                       ) : isForecast ? (
-                        <TrendingUp size={16} color="#38bdf8" />
+                        <TrendingUp size={16} color="#0284c7" />
                       ) : (
                         <ShieldCheck size={16} color="#10b981" />
                       )}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f8fafc', marginBottom: '2px' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
                         {n.title}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                         {n.message}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '4px', fontSize: '0.65rem', color: '#64748b' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '4px', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                         <Clock size={10} />
                         <span>Just now</span>
                       </div>

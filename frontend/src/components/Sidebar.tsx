@@ -30,46 +30,127 @@ interface NavGroup {
 }
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab } = useApp();
+  const { activeTab, setActiveTab, userRole } = useApp();
 
-  const navGroups: NavGroup[] = [
-    {
-      sectionTitle: 'OVERVIEW',
-      items: [
-        { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard size={17} /> },
-      ],
-    },
-    {
-      sectionTitle: 'INTELLIGENCE',
-      items: [
-        { id: 'skills', label: 'Skills', icon: <BrainCircuit size={17} />, badge: '36 Skills', badgeColor: '#7c3aed' },
-        { id: 'districts', label: 'Districts', icon: <MapPin size={17} />, badge: '40 Dists', badgeColor: '#0284c7' },
-        { id: 'forecasts', label: 'Forecasts', icon: <TrendingUp size={17} />, badge: '12-Mo', badgeColor: '#0891b2' },
-        { id: 'gaps', label: 'Gap Map', icon: <Grid3X3 size={17} />, badge: 'Critical', badgeColor: '#ef4444' },
-      ],
-    },
-    {
-      sectionTitle: 'ACTION',
-      items: [
-        { id: 'substitution', label: 'Skill Pathways', icon: <GitFork size={17} /> },
-        { id: 'recommendations', label: 'Recommendations', icon: <Lightbulb size={17} />, badge: 'Auto-Gen', badgeColor: '#059669' },
-      ],
-    },
-    {
-      sectionTitle: 'AI & DATA',
-      items: [
-        { id: 'ai-analyst', label: 'AI Analyst', icon: <BotMessageSquare size={17} />, badge: 'Copilot', badgeColor: '#8b5cf6' },
-        { id: 'data-sources', label: 'Data Sources', icon: <Database size={17} />, badge: 'Live', badgeColor: '#059669' },
-      ],
-    },
-    {
-      sectionTitle: 'ACCOUNT',
-      items: [
-        { id: 'profile', label: 'Profile', icon: <User size={17} /> },
-        { id: 'settings-security', label: 'Security', icon: <Key size={17} /> },
-      ],
-    },
-  ];
+  const getNavGroups = (): NavGroup[] => {
+    if (userRole === 'job_seeker') {
+      return [
+        {
+          sectionTitle: 'OVERVIEW',
+          items: [
+            { id: 'dashboard', label: 'My Career Dashboard', icon: <LayoutDashboard size={17} /> },
+          ],
+        },
+        {
+          sectionTitle: 'MY CAREER',
+          items: [
+            { id: 'profile', label: 'My Profile', icon: <User size={17} /> },
+            { id: 'skills', label: 'My Skills', icon: <BrainCircuit size={17} />, badge: 'Skills', badgeColor: '#7c3aed' },
+            { id: 'gaps', label: 'Skill Gap Analysis', icon: <Grid3X3 size={17} />, badge: 'Readiness', badgeColor: '#ef4444' },
+            { id: 'substitution', label: 'Career Pathways', icon: <GitFork size={17} />, badge: 'Bridge', badgeColor: '#10b981' },
+            { id: 'recommendations', label: 'Recommendations', icon: <Lightbulb size={17} />, badge: 'Actions', badgeColor: '#059669' },
+          ],
+        },
+        {
+          sectionTitle: 'MARKET INTELLIGENCE',
+          items: [
+            { id: 'forecasts', label: 'Market Trends', icon: <TrendingUp size={17} />, badge: 'Forecast', badgeColor: '#0891b2' },
+            { id: 'districts', label: 'Relevant Districts', icon: <MapPin size={17} />, badge: 'Jobs', badgeColor: '#0284c7' },
+          ],
+        },
+        {
+          sectionTitle: 'AI ADVISOR',
+          items: [
+            { id: 'ai-analyst', label: 'AI Career Advisor', icon: <BotMessageSquare size={17} />, badge: 'Advisor', badgeColor: '#8b5cf6' },
+          ],
+        },
+        {
+          sectionTitle: 'ACCOUNT',
+          items: [
+            { id: 'settings-security', label: 'Security', icon: <Key size={17} /> },
+          ],
+        },
+      ];
+    }
+
+    if (userRole === 'training_centre') {
+      return [
+        {
+          sectionTitle: 'OVERVIEW',
+          items: [
+            { id: 'dashboard', label: 'Training Overview', icon: <LayoutDashboard size={17} /> },
+          ],
+        },
+        {
+          sectionTitle: 'TRAINING & SKILLS',
+          items: [
+            { id: 'skills', label: 'Skill Demand', icon: <BrainCircuit size={17} />, badge: '36 Skills', badgeColor: '#7c3aed' },
+            { id: 'districts', label: 'Districts & Capacity', icon: <MapPin size={17} />, badge: 'Capacity', badgeColor: '#0284c7' },
+            { id: 'gaps', label: 'Skill Gap Analysis', icon: <Grid3X3 size={17} />, badge: 'Deficits', badgeColor: '#ef4444' },
+            { id: 'substitution', label: 'Skill Pathways', icon: <GitFork size={17} /> },
+            { id: 'recommendations', label: 'Course Planning', icon: <Lightbulb size={17} />, badge: 'Batches', badgeColor: '#059669' },
+          ],
+        },
+        {
+          sectionTitle: 'INTELLIGENCE & AI',
+          items: [
+            { id: 'forecasts', label: 'Demand Forecasts', icon: <TrendingUp size={17} />, badge: '12-Mo', badgeColor: '#0891b2' },
+            { id: 'ai-analyst', label: 'AI Training Advisor', icon: <BotMessageSquare size={17} />, badge: 'Copilot', badgeColor: '#8b5cf6' },
+            { id: 'data-sources', label: 'Data Sources', icon: <Database size={17} />, badge: 'Live', badgeColor: '#059669' },
+          ],
+        },
+        {
+          sectionTitle: 'ACCOUNT',
+          items: [
+            { id: 'profile', label: 'Profile', icon: <User size={17} /> },
+            { id: 'settings-security', label: 'Security', icon: <Key size={17} /> },
+          ],
+        },
+      ];
+    }
+
+    // Default: Policymaker / Admin
+    return [
+      {
+        sectionTitle: 'OVERVIEW',
+        items: [
+          { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard size={17} /> },
+        ],
+      },
+      {
+        sectionTitle: 'INTELLIGENCE',
+        items: [
+          { id: 'skills', label: 'Skills', icon: <BrainCircuit size={17} />, badge: '36 Skills', badgeColor: '#7c3aed' },
+          { id: 'districts', label: 'Districts', icon: <MapPin size={17} />, badge: '40 Dists', badgeColor: '#0284c7' },
+          { id: 'forecasts', label: 'Forecasts', icon: <TrendingUp size={17} />, badge: '12-Mo', badgeColor: '#0891b2' },
+          { id: 'gaps', label: 'Gap Map', icon: <Grid3X3 size={17} />, badge: 'Critical', badgeColor: '#ef4444' },
+        ],
+      },
+      {
+        sectionTitle: 'ACTION',
+        items: [
+          { id: 'substitution', label: 'Skill Pathways', icon: <GitFork size={17} /> },
+          { id: 'recommendations', label: 'Recommendations', icon: <Lightbulb size={17} />, badge: 'Directives', badgeColor: '#059669' },
+        ],
+      },
+      {
+        sectionTitle: 'AI & DATA',
+        items: [
+          { id: 'ai-analyst', label: 'AI Policy Analyst', icon: <BotMessageSquare size={17} />, badge: 'Copilot', badgeColor: '#8b5cf6' },
+          { id: 'data-sources', label: 'Data Sources', icon: <Database size={17} />, badge: 'Live', badgeColor: '#059669' },
+        ],
+      },
+      {
+        sectionTitle: 'ACCOUNT',
+        items: [
+          { id: 'profile', label: 'Profile', icon: <User size={17} /> },
+          { id: 'settings-security', label: 'Security', icon: <Key size={17} /> },
+        ],
+      },
+    ];
+  };
+
+  const navGroups = getNavGroups();
 
   return (
     <>

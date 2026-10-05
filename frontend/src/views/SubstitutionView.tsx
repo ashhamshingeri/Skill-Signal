@@ -28,7 +28,9 @@ interface Pathway {
 }
 
 export const SubstitutionView: React.FC = () => {
-  const { setActiveTab, setSelectedSkillId } = useApp();
+  const { user, userRole, setActiveTab, setSelectedSkillId, showToast } = useApp();
+
+  const isJobSeeker = userRole === 'job_seeker';
 
   const pathways: Pathway[] = [
     {
@@ -52,8 +54,9 @@ export const SubstitutionView: React.FC = () => {
         'PMSM electric traction motor diagnostics',
         'Thermal cooling loop failure simulation',
       ],
-      rationale:
-        'Mechanical aptitude translates seamlessly. Fast 4-week PMKVY bridge module eliminates 80% of standard 6-month training costs.',
+      rationale: isJobSeeker
+        ? 'Your existing mechanical aptitude directly carries over. A focused 4-week PMKVY bridge module equips you with high-voltage EV diagnostic competencies, unlocking immediate hiring opportunities with +42% average wage uplift.'
+        : 'Mechanical aptitude translates seamlessly. Fast 4-week PMKVY bridge module eliminates 80% of standard 6-month training costs.',
     },
     {
       id: 'pw-02',
@@ -76,8 +79,9 @@ export const SubstitutionView: React.FC = () => {
         'Net-metering DISCOM compliance standards',
         'Solar irradiance & shading optimization calculation',
       ],
-      rationale:
-        'Essential for rapid deployment under PM Surya Ghar Muft Bijli Yojana. 3-week intensive bridge certified by SCGJ.',
+      rationale: isJobSeeker
+        ? 'Your electrical grounding and wiring knowledge bridges rapidly into rooftop solar. With PM Surya Ghar scheme expansion, DISCOM-certified technicians earn up to +38% higher rates.'
+        : 'Essential for rapid deployment under PM Surya Ghar Muft Bijli Yojana. 3-week intensive bridge certified by SCGJ.',
     },
     {
       id: 'pw-03',
@@ -99,8 +103,9 @@ export const SubstitutionView: React.FC = () => {
         'Multimodal bounding box & segmentation labeling tools',
         'LLM prompt engineering verification protocols',
       ],
-      rationale:
-        'Prevents mass unemployment among entry-level BPO workers displaced by OCR/LLMs by pivoting them directly into LLM training pipelines.',
+      rationale: isJobSeeker
+        ? 'Pivot your language fluency and typing speed into the high-growth AI dataset industry. 2-week bridge in RLHF evaluation qualifies you for remote AI annotation roles.'
+        : 'Prevents mass unemployment among entry-level BPO workers displaced by OCR/LLMs by pivoting them directly into LLM training pipelines.',
     },
     {
       id: 'pw-04',
@@ -122,37 +127,62 @@ export const SubstitutionView: React.FC = () => {
         'CMOS transistor level layout design',
         'Static timing analysis constraints',
       ],
-      rationale:
-        'Addresses the acute talent deficit for India Semiconductor Mission (ISM) packaging and design facilities.',
+      rationale: isJobSeeker
+        ? 'High-value career leap for electronics technicians into India Semiconductor Mission fabrication hubs in Bengaluru and Gujarat, with exceptional long-term wage growth.'
+        : 'Addresses the acute talent deficit for India Semiconductor Mission (ISM) packaging and design facilities.',
     },
   ];
 
   const [activePathway, setActivePathway] = useState<Pathway>(pathways[0]);
+
+  const handleEnrollOrSave = () => {
+    showToast(`Enrolled in ${activePathway.targetSkill} Bridge Module`, 'success');
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Header Bar */}
       <div className="card-white" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+            <span className="badge badge-primary">
+              {isJobSeeker ? 'Career Transition Architecture' : 'Workforce Capacity Intervention'}
+            </span>
+          </div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-            Skill Pathways
+            {isJobSeeker ? 'Career Pathways & Transition Bridge' : 'Skill Pathways & Reskilling Graph'}
           </h2>
           <p style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--accent-purple)', margin: '0.2rem 0 0.25rem 0' }}>
-            Bridge critical shortages by retraining workers from adjacent surplus trades.
+            {isJobSeeker
+              ? 'Find how your current background bridges into high-growth, high-wage careers with accelerated learning.'
+              : 'Bridge critical shortages by retraining workers from adjacent surplus trades.'}
           </p>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            Competency graph adjacency · 75%+ curriculum overlap · Accelerated bridge modules
+            {isJobSeeker
+              ? 'Preserved competencies · 75%+ curriculum overlap · Accelerated bridge modules'
+              : 'Competency graph adjacency · 75%+ curriculum overlap · Accelerated bridge modules'}
           </div>
         </div>
 
-        <button
-          className="btn btn-ai btn-sm"
-          onClick={() => setActiveTab('recommendations')}
-        >
-          <Sparkles size={14} />
-          <span>Generate Transition Action Brief</span>
-          <ArrowRight size={14} />
-        </button>
+        {isJobSeeker ? (
+          <button
+            className="btn btn-signature btn-sm"
+            onClick={() => setActiveTab('recommendations')}
+          >
+            <Sparkles size={14} />
+            <span>View My Recommended Actions</span>
+            <ArrowRight size={14} />
+          </button>
+        ) : (
+          <button
+            className="btn btn-ai btn-sm"
+            onClick={() => setActiveTab('recommendations')}
+          >
+            <Sparkles size={14} />
+            <span>Generate Transition Action Brief</span>
+            <ArrowRight size={14} />
+          </button>
+        )}
       </div>
 
       {/* Grid: Left Pathway Cards + Right Curriculum Breakdown */}
@@ -160,7 +190,7 @@ export const SubstitutionView: React.FC = () => {
         {/* Left Column: Pathway Selectors */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            High-Impact Pathways ({pathways.length})
+            {isJobSeeker ? 'Available Career Pathways' : 'High-Impact Pathways'} ({pathways.length})
           </div>
 
           {pathways.map((pw) => {
@@ -318,6 +348,38 @@ export const SubstitutionView: React.FC = () => {
               </ul>
             </div>
           </div>
+
+          {/* Bottom Action Strip */}
+          {isJobSeeker && (
+            <div className="card-white" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%)', border: '1px solid rgba(124, 58, 237, 0.2)' }}>
+              <div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Ready to start this {activePathway.transitionWeeks}-week transition?
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Accredited PMKVY 4.0 centers available in Pune, Bengaluru & Chennai clusters.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.6rem' }}>
+                <button
+                  className="btn btn-signature btn-sm"
+                  onClick={handleEnrollOrSave}
+                >
+                  <GraduationCap size={14} />
+                  <span>Enroll in PMKVY Bridge Module</span>
+                </button>
+
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setActiveTab('ai-analyst')}
+                >
+                  <Sparkles size={14} color="#7c3aed" />
+                  <span>Ask Career Advisor</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

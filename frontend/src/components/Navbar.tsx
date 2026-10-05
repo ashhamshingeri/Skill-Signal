@@ -142,7 +142,13 @@ export const Navbar: React.FC = () => {
           style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
         >
           <Sparkles size={14} />
-          <span>Ask AI Analyst</span>
+          <span>
+            {userRole === 'job_seeker'
+              ? 'Ask Career Advisor'
+              : userRole === 'training_centre'
+              ? 'Ask Training Advisor'
+              : 'Ask AI Analyst'}
+          </span>
         </button>
 
         {/* Theme Mode Toggle Button */}

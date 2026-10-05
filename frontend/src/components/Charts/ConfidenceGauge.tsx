@@ -74,7 +74,7 @@ export const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({
             justifyContent: 'center',
           }}
         >
-          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
             {score}%
           </span>
           <span style={{ fontSize: '0.65rem', color: color, fontWeight: 600, marginTop: 2 }}>
@@ -84,8 +84,8 @@ export const ConfidenceGauge: React.FC<ConfidenceGaugeProps> = ({
       </div>
 
       <div style={{ marginTop: '0.5rem' }}>
-        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>{label}</div>
-        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{subtext} ({level})</div>
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{label}</div>
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{subtext} ({level})</div>
       </div>
     </div>
   );

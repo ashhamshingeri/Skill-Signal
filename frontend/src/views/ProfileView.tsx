@@ -15,18 +15,74 @@ import {
   Moon,
   Sun,
   Laptop,
+  GraduationCap,
+  Briefcase,
+  Target,
+  Plus,
+  Trash2,
+  Sparkles,
 } from 'lucide-react';
 
 export const ProfileView: React.FC = () => {
-  const { user, userRole, setActiveTab, theme, setTheme, showToast } = useApp();
+  const { user, userRole, updateUser, setActiveTab, theme, setTheme, showToast } = useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [org, setOrg] = useState(user?.organization || '');
+  const [education, setEducation] = useState(user?.education || 'Diploma in Mechanical Engineering');
+  const [currentOccupation, setCurrentOccupation] = useState(user?.currentOccupation || 'Internal Combustion Engine (ICE) Mechanic');
+  const [targetCareer, setTargetCareer] = useState(user?.targetCareer || 'Electric Vehicle Powertrain Diagnostics');
+  const [experienceYears, setExperienceYears] = useState(user?.experienceYears || '3 Years');
+  const [careerInterests, setCareerInterests] = useState(user?.careerInterests?.join(', ') || 'Clean Mobility, Electric Vehicles, Automotive Automation');
+  const [skillsList, setSkillsList] = useState<string[]>(
+    user?.currentSkills || [
+      'Mechanical chassis assembly & suspension',
+      'Braking & regenerative hydraulics',
+      'OBD-II diagnostic tools & fault code reading',
+      'Workshop safety & high-current protocols',
+    ]
+  );
+  const [newSkillText, setNewSkillText] = useState('');
 
   const handleSave = () => {
     setIsEditing(false);
+    updateUser({
+      name,
+      organization: org,
+      education,
+      currentOccupation,
+      targetCareer,
+      experienceYears,
+      careerInterests: careerInterests.split(',').map(s => s.trim()).filter(Boolean),
+      currentSkills: skillsList,
+    });
     showToast('Profile details updated successfully', 'success');
   };
+
+  const handleAddSkill = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSkillText.trim()) return;
+    if (!skillsList.includes(newSkillText.trim())) {
+      const updated = [...skillsList, newSkillText.trim()];
+      setSkillsList(updated);
+      if (!isEditing) {
+        updateUser({ currentSkills: updated });
+      }
+    }
+    setNewSkillText('');
+  };
+
+  const handleRemoveSkill = (skill: string) => {
+    const updated = skillsList.filter(s => s !== skill);
+    setSkillsList(updated);
+    if (!isEditing) {
+      updateUser({ currentSkills: updated });
+    }
+  };
+
+  const isJobSeeker = userRole === 'job_seeker';
+  const isTrainingMgr = userRole === 'training_centre';
+
+  const roleBadgeLabel = isJobSeeker ? 'Job Seeker / Candidate' : isTrainingMgr ? 'Training Center Administrator' : 'Government Official';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
@@ -35,13 +91,17 @@ export const ProfileView: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span className="badge badge-signature">Authenticated Account</span>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>MSDE National Registry</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {isJobSeeker ? 'SkillSignal Career Profile' : 'MSDE National Registry'}
+            </span>
           </div>
-          <h2 style={{ fontSize: '1.5rem', color: '#f8fafc' }}>
-            User Profile & Workspace Account
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
+            {isJobSeeker ? 'Candidate Profile & Career Settings' : 'User Profile & Workspace Account'}
           </h2>
-          <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-            Manage your personal identity, enterprise roles, and preferences.
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            {isJobSeeker
+              ? 'Manage your background, target skills, education, and career preferences.'
+              : 'Manage your personal identity, enterprise roles, and preferences.'}
           </p>
         </div>
 
@@ -88,7 +148,7 @@ export const ProfileView: React.FC = () => {
             className="badge badge-signature"
             style={{ textTransform: 'uppercase', fontSize: '0.7rem', marginBottom: '1.5rem' }}
           >
-            {userRole}
+            {userRole.replace('_', ' ')}
           </span>
 
           <div style={{ width: '100%', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left', fontSize: '0.78rem' }}>
@@ -100,22 +160,24 @@ export const ProfileView: React.FC = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-muted)' }}>Account Tier</span>
-              <strong style={{ color: 'var(--text-primary)' }}>Government Official</strong>
+              <strong style={{ color: 'var(--text-primary)' }}>{roleBadgeLabel}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Jurisdiction</span>
-              <strong style={{ color: 'var(--text-primary)' }}>{user?.stateName || 'All India'}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>Location / Cluster</span>
+              <strong style={{ color: 'var(--text-primary)' }}>
+                {user?.districtName ? `${user.districtName}, ` : ''}{user?.stateName || 'Karnataka (Bengaluru)'}
+              </strong>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Editable Profile Details & Theme Settings */}
+        {/* Right Column: Editable Profile Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Identity Form */}
           <div className="card-white" style={{ padding: '1.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Account Information
+                {isJobSeeker ? 'Career & Background Details' : 'Account Information'}
               </h4>
               <button
                 className="btn-outline"
@@ -143,7 +205,99 @@ export const ProfileView: React.FC = () => {
 
                 <div>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
-                    Organization / Ministry
+                    Registered Email Address
+                  </label>
+                  <input
+                    type="email"
+                    className="input-field"
+                    value={user?.email || ''}
+                    disabled
+                    style={{ opacity: 0.7, cursor: 'not-allowed' }}
+                  />
+                </div>
+              </div>
+
+              {/* Role-specific fields */}
+              {isJobSeeker ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                        Education / Qualification
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        value={education}
+                        disabled={!isEditing}
+                        onChange={(e) => setEducation(e.target.value)}
+                        placeholder="e.g. Diploma in Mechanical Engineering"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                        Current Occupation / Trade
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        value={currentOccupation}
+                        disabled={!isEditing}
+                        onChange={(e) => setCurrentOccupation(e.target.value)}
+                        placeholder="e.g. ICE Mechanic"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                        Target Career Role
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        value={targetCareer}
+                        disabled={!isEditing}
+                        onChange={(e) => setTargetCareer(e.target.value)}
+                        placeholder="e.g. Electric Vehicle Powertrain Diagnostics"
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                        Years of Work Experience
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        value={experienceYears}
+                        disabled={!isEditing}
+                        onChange={(e) => setExperienceYears(e.target.value)}
+                        placeholder="e.g. 3 Years"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                      Career Interests (Comma Separated)
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={careerInterests}
+                      disabled={!isEditing}
+                      onChange={(e) => setCareerInterests(e.target.value)}
+                      placeholder="e.g. Clean Mobility, Electric Vehicles, Automation"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                    {isTrainingMgr ? 'Training Centre / Institute' : 'Organization / Ministry'}
                   </label>
                   <input
                     type="text"
@@ -153,22 +307,72 @@ export const ProfileView: React.FC = () => {
                     onChange={(e) => setOrg(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
-                  Registered Email Address
-                </label>
-                <input
-                  type="email"
-                  className="input-field"
-                  value={user?.email || ''}
-                  disabled
-                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                />
-              </div>
+              )}
             </div>
           </div>
+
+          {/* Job Seeker Skills Management Section */}
+          {isJobSeeker && (
+            <div className="card-white" style={{ padding: '1.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                    My Current Skills & Competencies
+                  </h4>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Used by SkillSignal to generate your skill gap analysis and bridge pathways
+                  </span>
+                </div>
+                <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
+                  {skillsList.length} Skills
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                {skillsList.map((s, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '4px 10px',
+                      background: 'rgba(124, 58, 237, 0.08)',
+                      border: '1px solid rgba(124, 58, 237, 0.25)',
+                      borderRadius: '8px',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-primary)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span>{s}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(s)}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '0.8rem' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleAddSkill} style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Type a skill and press Enter..."
+                  value={newSkillText}
+                  onChange={(e) => setNewSkillText(e.target.value)}
+                  style={{ fontSize: '0.82rem', height: '36px' }}
+                />
+                <button type="submit" className="btn btn-secondary btn-sm" style={{ height: '36px' }}>
+                  <Plus size={14} />
+                  <span>Add Skill</span>
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Theme Preferences */}
           <div className="card-white" style={{ padding: '1.75rem' }}>

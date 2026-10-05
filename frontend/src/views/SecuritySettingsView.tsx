@@ -72,19 +72,19 @@ export const SecuritySettingsView: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span className="badge badge-critical">Security & Authentication</span>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Enterprise Access Controls</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Enterprise Access Controls</span>
           </div>
-          <h2 style={{ fontSize: '1.5rem', color: '#f8fafc' }}>
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
             Security, Passwords & Active Sessions
           </h2>
-          <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Manage authentication credentials, session tokens, and security audit logs.
           </p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        {/* Left Column: Change Password */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Top Section: Change Password */}
         <div className="card-white" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Key size={18} color="#7c3aed" />

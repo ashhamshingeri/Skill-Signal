@@ -50,27 +50,27 @@ export const HeatmapMatrix: React.FC<HeatmapMatrixProps> = ({
     <div className="glass-card" style={{ padding: '1.25rem', overflowX: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div>
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>{title}</h4>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Real-time demand-supply delta matrix</span>
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h4>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-time demand-supply delta matrix</span>
         </div>
 
         {/* Legend */}
         <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.7rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <span style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 2 }}></span>
-            <span style={{ color: '#cbd5e1' }}>Crit Shortage (&gt;+40)</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Crit Shortage (&gt;+40)</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <span style={{ width: 12, height: 12, background: '#f59e0b', borderRadius: 2 }}></span>
-            <span style={{ color: '#cbd5e1' }}>Shortage (+5..+40)</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Shortage (+5..+40)</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <span style={{ width: 12, height: 12, background: '#10b981', borderRadius: 2 }}></span>
-            <span style={{ color: '#cbd5e1' }}>Balanced (±10)</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Balanced (±10)</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <span style={{ width: 12, height: 12, background: '#3b82f6', borderRadius: 2 }}></span>
-            <span style={{ color: '#cbd5e1' }}>Surplus (&lt;-10)</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Surplus (&lt;-10)</span>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export const HeatmapMatrix: React.FC<HeatmapMatrixProps> = ({
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px' }}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', padding: '0.5rem', fontSize: '0.75rem', color: '#94a3b8', width: '160px' }}>
+              <th style={{ textAlign: 'left', padding: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, width: '160px' }}>
                 District / Region
               </th>
               {columns.map((col, idx) => (
@@ -88,7 +88,7 @@ export const HeatmapMatrix: React.FC<HeatmapMatrixProps> = ({
                   style={{
                     padding: '0.5rem 0.25rem',
                     fontSize: '0.7rem',
-                    color: '#cbd5e1',
+                    color: 'var(--text-secondary)',
                     fontWeight: 500,
                     textAlign: 'center',
                     maxWidth: '100px',
@@ -110,9 +110,9 @@ export const HeatmapMatrix: React.FC<HeatmapMatrixProps> = ({
                   style={{
                     padding: '0.5rem',
                     fontSize: '0.8rem',
+                    color: 'var(--text-primary)',
                     fontWeight: 600,
-                    color: '#e2e8f0',
-                    background: 'rgba(255, 255, 255, 0.02)',
+                    background: 'var(--bg-surface-secondary)',
                     borderRadius: '4px',
                   }}
                 >

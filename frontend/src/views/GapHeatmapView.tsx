@@ -113,12 +113,12 @@ export const GapHeatmapView: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span className="badge badge-primary">Dynamic Heatmap Engine</span>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Real-Time Cross-District Disparity Analysis</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-Time Cross-District Disparity Analysis</span>
           </div>
-          <h2 style={{ fontSize: '1.5rem', color: '#f8fafc' }}>
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
             Regional Skill Gap & Shortage Heatmap Matrix
           </h2>
-          <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Multi-dimensional grid mapping industrial district demand deficits against local training centre capacity.
           </p>
         </div>
@@ -158,27 +158,51 @@ export const GapHeatmapView: React.FC = () => {
       {/* 4 Summary Badges */}
       <div className="grid-4">
         <div className="stat-card stat-critical glass-card">
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Critical Shortage Cells (&gt;+40)</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f87171', margin: '0.25rem 0' }}>18</div>
-          <div style={{ fontSize: '0.7rem', color: '#fca5a5' }}>Immediate CapEx intervention required</div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
+            Critical Shortage Cells (&gt;+40)
+          </div>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ef4444', lineHeight: 1.15, margin: '0.35rem 0' }}>
+            18
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#dc2626', fontWeight: 500 }}>
+            Immediate CapEx intervention required
+          </div>
         </div>
 
         <div className="stat-card stat-warning glass-card">
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Moderate Shortages (+20..+40)</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fbbf24', margin: '0.25rem 0' }}>22</div>
-          <div style={{ fontSize: '0.7rem', color: '#fde68a' }}>Bridge training sufficient</div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
+            Moderate Shortages (+20..+40)
+          </div>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#d97706', lineHeight: 1.15, margin: '0.35rem 0' }}>
+            22
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#b45309', fontWeight: 500 }}>
+            Bridge training sufficient
+          </div>
         </div>
 
         <div className="stat-card stat-success glass-card">
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Balanced Competencies (±10)</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#34d399', margin: '0.25rem 0' }}>34</div>
-          <div style={{ fontSize: '0.7rem', color: '#a7f3d0' }}>Healthy demand-supply parity</div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
+            Balanced Competencies (±10)
+          </div>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669', lineHeight: 1.15, margin: '0.35rem 0' }}>
+            34
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 500 }}>
+            Healthy demand-supply parity
+          </div>
         </div>
 
-        <div className="stat-card glass-card">
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Critical Surplus Cells (&lt;-40)</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#60a5fa', margin: '0.25rem 0' }}>6</div>
-          <div style={{ fontSize: '0.7rem', color: '#bfdbfe' }}>Automation transition candidates</div>
+        <div className="stat-card stat-info glass-card">
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.01em' }}>
+            Critical Surplus Cells (&lt;-40)
+          </div>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563eb', lineHeight: 1.15, margin: '0.35rem 0' }}>
+            6
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#1d4ed8', fontWeight: 500 }}>
+            Automation transition candidates
+          </div>
         </div>
       </div>
 

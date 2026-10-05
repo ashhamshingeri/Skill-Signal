@@ -65,12 +65,12 @@ export const DistrictIntelligenceView: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span className="badge badge-primary">Geospatial Intelligence</span>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Tier-1, Tier-2 & Tier-3 District Granularity</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tier-1, Tier-2 & Tier-3 District Granularity</span>
           </div>
-          <h2 style={{ fontSize: '1.5rem', color: '#f8fafc' }}>
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
             District-Level Labour Market & Training Readiness
           </h2>
-          <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             Local training capacity, data readiness index, and industrial cluster skill deficits.
           </p>
         </div>
@@ -93,67 +93,72 @@ export const DistrictIntelligenceView: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid: Left District Explorer + Right District Drilldown */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '1.5rem' }}>
-        {/* Left Column: District List */}
-        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '820px' }}>
-          <div style={{ position: 'relative' }}>
-            <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '11px' }} />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search districts (e.g. Pune, Mysuru, Surat)..."
-              value={searchDistrict}
-              onChange={(e) => setSearchDistrict(e.target.value)}
-              style={{ paddingLeft: '32px' }}
-            />
+      {/* Stacked Layout: District Selector Card on Top */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Select District for Local Intelligence
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Inspect industrial clusters, local ITIs, and specific district-level supply-demand gaps
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', minWidth: '260px', flex: '1', maxWidth: '380px' }}>
+              <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Search districts (e.g. Pune, Mysuru, Surat)..."
+                value={searchDistrict}
+                onChange={(e) => setSearchDistrict(e.target.value)}
+                style={{ paddingLeft: '32px', fontSize: '0.82rem', width: '100%' }}
+              />
+            </div>
           </div>
 
-          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem', maxHeight: '180px', overflowY: 'auto', padding: '2px' }}>
             {filteredDistricts.map((district) => {
               const isSelected = activeDistrict?.id === district.id;
               return (
                 <div
                   key={district.id}
                   style={{
-                    padding: '0.875rem',
+                    padding: '0.75rem 0.9rem',
                     borderRadius: '8px',
-                    background: isSelected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    background: isSelected ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-surface)',
                     border: '1px solid',
-                    borderColor: isSelected ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-subtle)',
+                    borderColor: isSelected ? '#059669' : 'var(--border-subtle)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
+                    boxShadow: isSelected ? '0 0 0 1px #059669' : 'none',
                   }}
                   onClick={() => {
                     setActiveDistrict(district);
                     setSelectedDistrictId(district.id);
                   }}
-                  onMouseEnter={(e) => {
-                    if (!isSelected) e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.25)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSelected) e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                  }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isSelected ? '#34d399' : '#f8fafc' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: isSelected ? '#059669' : 'var(--text-primary)' }}>
                       {district.name}
                     </span>
-                    <span style={{ fontSize: '0.7rem', color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '1px 5px', borderRadius: 4 }}>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', background: 'var(--bg-surface-secondary)', padding: '1px 5px', borderRadius: 4 }}>
                       {district.code}
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
-                    {district.stateName || 'State'} • Pop: {(district.population / 1000000).toFixed(1)}M
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                    {district.stateName || 'State'} • {(district.population / 1000000).toFixed(1)}M
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
-                    <span style={{ color: '#38bdf8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem' }}>
+                    <span style={{ color: 'var(--primary-color)' }}>
                       Coverage: <strong>{district.coveragePercentage}%</strong>
                     </span>
-                    <span style={{ color: '#10b981' }}>
-                      Quality Score: <strong>{district.dataQualityScore}/100</strong>
+                    <span style={{ color: '#059669' }}>
+                      Score: <strong>{district.dataQualityScore}</strong>
                     </span>
                   </div>
                 </div>
@@ -162,9 +167,9 @@ export const DistrictIntelligenceView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Selected District Profile */}
+        {/* Selected District Profile (Full Width Below) */}
         {activeDistrict ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* District Header Card */}
             <div className="glass-card" style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -173,13 +178,13 @@ export const DistrictIntelligenceView: React.FC = () => {
                     <span className="badge badge-primary">{activeDistrict.stateName}</span>
                     <span className="badge badge-balanced">District Code: {activeDistrict.code}</span>
                   </div>
-                  <h3 style={{ fontSize: '1.5rem', color: '#f8fafc' }}>
+                  <h3 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                     {activeDistrict.name} District Intelligence
                   </h3>
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Data Readiness Score</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Data Readiness Score</div>
                   <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#34d399' }}>
                     {activeDistrict.dataQualityScore} / 100
                   </div>
@@ -188,29 +193,29 @@ export const DistrictIntelligenceView: React.FC = () => {
 
               {/* 4 Stats Grid */}
               <div className="grid-4">
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Total Population</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc' }}>
+                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.75rem', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Total Population</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {(activeDistrict.population / 1000000).toFixed(2)} Million
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Urban / Industrial %</div>
+                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.75rem', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Urban / Industrial %</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#38bdf8' }}>
                     {activeDistrict.urbanPercentage}%
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Active Training ITIs</div>
+                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.75rem', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Active Training ITIs</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24' }}>
                     {Math.round(activeDistrict.population / 450000) || 12} Centres
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Monthly Enrolment</div>
+                <div style={{ background: 'var(--bg-surface-secondary)', padding: '0.75rem', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Monthly Enrolment</div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#c084fc' }}>
                     ~{Math.round(activeDistrict.population / 1800) || 3200} / mo
                   </div>
@@ -233,10 +238,10 @@ export const DistrictIntelligenceView: React.FC = () => {
             <div className="glass-card" style={{ padding: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     Active Training Facilities in {activeDistrict.name}
                   </h4>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>PMKVY, Government ITI, and Polytechnic Hubs</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PMKVY, Government ITI, and Polytechnic Hubs</span>
                 </div>
               </div>
 
@@ -279,19 +284,19 @@ export const DistrictIntelligenceView: React.FC = () => {
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f8fafc' }}>{tc.name}</div>
-                      <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{tc.name}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                         Type: <span style={{ color: '#38bdf8' }}>{tc.type}</span> • Focus: {tc.keyTrades}
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.75rem' }}>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: '#94a3b8', fontSize: '0.7rem' }}>Annual Capacity</div>
-                        <strong style={{ color: '#f8fafc' }}>{tc.capacity} Seats</strong>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Annual Capacity</div>
+                        <strong style={{ color: 'var(--text-primary)' }}>{tc.capacity} Seats</strong>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: '#94a3b8', fontSize: '0.7rem' }}>Placement Rate</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Placement Rate</div>
                         <strong style={{ color: '#10b981' }}>{tc.placementRate}%</strong>
                       </div>
                     </div>
